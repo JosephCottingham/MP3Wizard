@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "638687281337",
+    "firebase_url": "https://mp3wizard-466b5.firebaseio.com",
+    "project_id": "mp3wizard-466b5",
+    "storage_bucket": "mp3wizard-466b5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638687281337:android:20bf5d7fa4e7ec2a439b68",
+        "android_client_info": {
+          "package_name": "com.teambuild.mp3wizard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "638687281337-vb8e374660l17vkj4em66p640pdrt5mm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.teambuild.mp3wizard",
+            "certificate_hash": "4fb70b244d450820ee32793bb45b1a8aa1945c7d"
+          }
+        },
+        {
+          "client_id": "638687281337-o07utr8jfdb3tg0ee671ldv6dtq48j5a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIkV_3CmYtytx3xenBxviEtF3obcjGBq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "638687281337-o07utr8jfdb3tg0ee671ldv6dtq48j5a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
