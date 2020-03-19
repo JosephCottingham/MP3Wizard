@@ -25,6 +25,7 @@ import com.google.firebase.database.Query;
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.R;
 import com.teambuild.mp3wizard.ui.dashboard.DashboardFragment;
+import com.teambuild.mp3wizard.ui.dataStorage;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -70,7 +71,7 @@ public class HomeFragment extends Fragment {
         listView = root.findViewById(R.id.downloadListView);
         Query query = FirebaseDatabase.getInstance().getReference().child(userId);
 
-        ArrayList<String> downloadList = new ArrayList<String>(Arrays.asList(ReadDownloadedList()));
+        ArrayList<String> downloadList = new ArrayList<String>(Arrays.asList(dataStorage.ReadDownloadedList(getContext(), userId)));
         ArrayAdapter<String> arrayAdapter =
                 new ArrayAdapter<String>(getContext(), R.layout.book_info_downloads, downloadList);
         listView.setAdapter(arrayAdapter);
@@ -79,67 +80,6 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
-    private String[] ReadDownloadedList(){
-        String line = null;
-        String dir = getContext().getFilesDir().getAbsolutePath();
-        File FileDir = new File(dir + "/" + mFirebaseUser.getUid() + "/");
-        String path = FileDir.getAbsolutePath();
-
-        try {
-            FileInputStream fileInputStream = new FileInputStream (new File(path + "downloaded.txt"));
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            StringBuilder stringBuilder = new StringBuilder();
-
-            while ( (line = bufferedReader.readLine()) != null )
-            {
-                stringBuilder.append(line + System.getProperty("line.separator"));
-            }
-            fileInputStream.close();
-            line = stringBuilder.toString();
-
-            bufferedReader.close();
-        }
-        catch(FileNotFoundException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        catch(IOException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        Log.d("Hello", "ReadFile: Line " + line);
-        return line.split(System.getProperty("line.separator"));
-    }
-
-    private String[] ReadTimeData(String title){
-        String line = null;
-        String dir = getContext().getFilesDir().getAbsolutePath();
-        File FileDir = new File(dir + "/" + mFirebaseUser.getUid() + "/" + title + "/");
-        String path = FileDir.getAbsolutePath();
-
-        try {
-            FileInputStream fileInputStream = new FileInputStream (new File(path + "loc.txt"));
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            StringBuilder stringBuilder = new StringBuilder();
-
-            while ( (line = bufferedReader.readLine()) != null )
-            {
-                stringBuilder.append(line + System.getProperty("line.separator"));
-            }
-            fileInputStream.close();
-            line = stringBuilder.toString();
-
-            bufferedReader.close();
-        }
-        catch(FileNotFoundException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        catch(IOException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        Log.d("Hello", "ReadFile: Line " + line);
-        return line.split(System.getProperty("line.separator"));
-    }
 
     private  boolean removeFile(Book book, String userId){
         return true;

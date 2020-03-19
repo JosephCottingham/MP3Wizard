@@ -37,6 +37,7 @@ import com.google.firebase.storage.StorageReference;
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.HomeActivity;
 import com.teambuild.mp3wizard.R;
+import com.teambuild.mp3wizard.ui.dataStorage;
 
 
 import org.w3c.dom.Text;
@@ -102,7 +103,7 @@ public class DashboardFragment extends Fragment {
                 TextView bookTime = v.findViewById(R.id.bookTime);
                 TextView bookDownload = v.findViewById(R.id.bookDownloaded);
                 Button bookBtn = v.findViewById(R.id.bookDownloadBtn);
-                String[] downloadFileList = ReadDownloadedList();
+                String[] downloadFileList = dataStorage.ReadDownloadedList(getContext(), userId);
 
                 final Book book = (Book) model;
 
@@ -135,10 +136,10 @@ public class DashboardFragment extends Fragment {
         listView.setAdapter(firebaseListAdapter);
         return root;
     }
-    private boolean DownloadRefSetup(final Book book, String userId){
+    private boolean DownloadRefSetup(final Book book, final String userId){
         Log.d("Hello", "DownloadRefSetup: " + book.getFileNum() + " " + book.getTitle() + " " + book.getLocSec());
         for(int fileNum = 0; fileNum < Integer.parseInt(book.getFileNum()); fileNum++) {
-            StorageReference = firebaseStorage.getInstance().getReference("users/" + userId + "/" + book.getTitle() + "/");
+            StorageReference = firebaseStorage.getInstance().getReference("users" + File.separator + userId + File.separator + book.getTitle() + File.separator);
             ref = StorageReference.child(String.format("%d.mp3", fileNum));
             Log.d("Hello", "DownloadRefSetup: " + ref.getPath());
             Log.d("Hello", "DownloadRefSetup: " + StorageReference.getName() + " | " + Integer.toString(fileNum));
@@ -148,14 +149,13 @@ public class DashboardFragment extends Fragment {
                 @Override
                 public void onSuccess(Uri uri) {
                     String dir = getContext().getFilesDir().getAbsolutePath();
-                    File FileDir = new File(dir + "/" + mFirebaseUser.getUid() + "/" + book.getTitle());
+                    File FileDir = new File(dir + File.separator + mFirebaseUser.getUid() + File.separator + book.getTitle());
                     FileDir.mkdirs();
-                    dir = FileDir.getAbsolutePath();
-                    Log.d("Hello", "onSuccess X : " + dir);
+                    Log.d("Hello", "onSuccess X : " + FileDir.getAbsolutePath());
                     Log.d("Hello", "onSuccess: URL " + uri.toString());
                     Log.d("Hello", "onSuccess: ");
                     downloadfile(getContext(), String.format("%d.mp3", fileNumName), FileDir.getAbsolutePath(), uri.toString());
-                    while (!(addDownloadToDownloadedList(book)));
+                    while (!(dataStorage.writeDownloadedList(book, getContext(), userId)));
                 }
             });
         }
@@ -173,72 +173,6 @@ public class DashboardFragment extends Fragment {
         downloadManager.enqueue(request);
         Log.d("Hello", "downloadfile: Downloaded");
     }
-    private boolean addDownloadToDownloadedList(final Book book){
-        String dir = getContext().getFilesDir().getAbsolutePath();
-        String userId = mFirebaseUser.getUid();
-        File FileDir = new File(dir + "/" + userId + "/");
-        String path = FileDir.getAbsolutePath();
-        try {
-            new File(path).mkdir();
-            File file = new File(path + "downloaded.txt");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileOutputStream fileOutputStream = new FileOutputStream(file,true);
-            fileOutputStream.write((book.getTitle() + System.getProperty("line.separator")).getBytes());
-
-            FileDir = new File(dir + "/" + userId + "/" + book.getTitle() + "/");
-            path = FileDir.getAbsolutePath();
-
-            new File(path).mkdir();
-            file = new File(path + "loc.txt");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            fileOutputStream = new FileOutputStream(file,true);
-            fileOutputStream.write((book.getCurrentFile() + System.getProperty("line.separator") +
-                    book.getFileNum() + System.getProperty("line.separator") + book.getLocSec() +
-                    System.getProperty("line.separator")).getBytes());
-
-            return true;
-        }  catch(FileNotFoundException ex) {
-            Log.d("Hello", ex.getMessage());
-        }  catch(IOException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        return  false;
-
-    }
-
-
-    private String[] ReadDownloadedList(){
-        String line = null;
-        String dir = getContext().getFilesDir().getAbsolutePath();
-        File FileDir = new File(dir + "/" + mFirebaseUser.getUid() + "/", "downloaded.txt");
-        try {
-            FileInputStream fileInputStream = new FileInputStream (FileDir);
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            StringBuilder stringBuilder = new StringBuilder();
-
-            while ( (line = bufferedReader.readLine()) != null )
-            {
-                stringBuilder.append(line + System.getProperty("line.separator"));
-            }
-            fileInputStream.close();
-            line = stringBuilder.toString();
-
-            bufferedReader.close();
-        }
-        catch(FileNotFoundException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        catch(IOException ex) {
-            Log.d("Hello", ex.getMessage());
-        }
-        Log.d("Hello", "ReadFile: Line " + line);
-        return line.split(System.getProperty("line.separator"));
-    }
 
     private void removeDownloadFile() {
         try {
@@ -247,7 +181,6 @@ public class DashboardFragment extends Fragment {
             PrintWriter writer = new PrintWriter(FileDir);
             writer.close();
 
-            Log.d("test", "removeDownloadFile: " + ReadDownloadedList());
             Log.d("Hello", "removeDownloadFile: ");
         } catch (IOException ex){
 
