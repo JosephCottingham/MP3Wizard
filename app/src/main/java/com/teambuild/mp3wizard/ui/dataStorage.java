@@ -22,14 +22,14 @@ public class dataStorage {
         String dir = context.getFilesDir().getAbsolutePath();
 
         try {
-            File FileDir = new File(dir + File.separator + userId + File.separator, "downloaded.txt");
+            File FileDir = new File(userId + File.separator, "downloaded.txt");
             Log.d("tet", "ReadDownloadedList: " + FileDir.getAbsolutePath());
             FileDir.mkdir();
             FileDir.createNewFile();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(FileDir.getAbsolutePath(), Context.MODE_APPEND));
             outputStreamWriter.write(book.getTitle() + System.getProperty("line.separator"));
             outputStreamWriter.close();
-            FileDir = new File(dir + File.separator + userId + File.separator + book.getTitle() + File.separator + "loc.txt");
+            FileDir = new File(userId + File.separator + book.getTitle() + File.separator + "loc.txt");
             outputStreamWriter = new OutputStreamWriter(context.openFileOutput(FileDir.getAbsolutePath(), Context.MODE_APPEND));
             outputStreamWriter.write(book.getCurrentFile() + System.getProperty("line.separator") +
                     book.getFileNum() + System.getProperty("line.separator") + book.getLocSec() +
@@ -81,10 +81,10 @@ public class dataStorage {
     }
 
 
-    private String[] ReadTimeData(String title, Context context, FirebaseUser mFirebaseUser){
+    private String[] ReadTimeData(String title, Context context, String userID){
         String line = null;
         String dir = context.getFilesDir().getAbsolutePath();
-        File FileDir = new File(dir + File.separator + mFirebaseUser.getUid() + File.separator + title + File.separator);
+        File FileDir = new File( userID + File.separator + title + File.separator);
         String path = FileDir.getAbsolutePath();
 
         try {
