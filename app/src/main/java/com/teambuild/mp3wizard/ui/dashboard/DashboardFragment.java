@@ -1,56 +1,51 @@
 package com.teambuild.mp3wizard.ui.dashboard;
 
 import android.app.DownloadManager;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
-
 
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.teambuild.mp3wizard.Book;
-import com.teambuild.mp3wizard.HomeActivity;
+import com.teambuild.mp3wizard.PlayerActivity;
 import com.teambuild.mp3wizard.R;
-import com.teambuild.mp3wizard.ui.dataStorage;
+import com.teambuild.mp3wizard.ui.localStorageDatabase;
 
-
-import org.w3c.dom.Text;
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+
+import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class DashboardFragment extends Fragment {
     private FileOutputStream fileOutputStream;
@@ -62,22 +57,77 @@ public class DashboardFragment extends Fragment {
     private FirebaseUser mFirebaseUser;
     private ListView listView;
     private FirebaseListAdapter firebaseListAdapter;
+    private localStorageDatabase db;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         dashboardViewModel = ViewModelProviders.of(this).get(DashboardViewModel.class);
         View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
+        Log.d("TEST", "onCreateView Dashboard Fragment: " + getApplicationContext().getPackageName());
+        db = new localStorageDatabase(getApplicationContext());
 
         root = listViewPopulate(root);
-        final TextView textView = root.findViewById(R.id.text_dashboard);
+        ArrayList<Book> arrayList = db.getAllDownloadData();
 
+        for (int x = 0; x < arrayList.size(); x++){
+            Book book = arrayList.get(x);
+            Log.d("TEST", "printDB: DBRow " + String.valueOf(x) + ": " + book.getTitle() + " | " + book.getCurrentFile() + " | " + book.getFileNum() + " | " + book.getLocSec() + " | " + book.getID());
+        }
+        final TextView textView = root.findViewById(R.id.text_dashboard);
+        Button MediaPrintDataBtn = root.findViewById(R.id.MediaPrintDataBtn);
+        Button MediaOpenBtn = root.findViewById(R.id.playtest);
+
+        MediaOpenBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getContext(), PlayerActivity.class).putExtra("bookID", "TEST"));
+            }
+        });
+
+        MediaPrintDataBtn.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.Q)
+            @Override
+            public void onClick(View v){
+                getMusic();
+            }
+            public void printDB(){
+                ArrayList<Book> arrayList = db.getAllDownloadData();
+                for (int x = 0; x < arrayList.size(); x++){
+                    Book book = arrayList.get(x);
+                    Log.d("TEST", "printDB: DBRow " + String.valueOf(x) + ": " + book.getTitle() + " | " + book.getCurrentFile() + " | " + book.getFileNum() + " | " + book.getLocSec());
+                }
+            }
+        });
         dashboardViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
-
         return root;
+    }
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    private void getMusic(){
+        ContentResolver contentResolver = getActivity().getContentResolver();
+        Uri audioUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor cursor = contentResolver.query(audioUri, null, null, null, null);
+        if (cursor!=null && cursor.moveToFirst()){
+            int SongTitle = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+            int SongPath = cursor.getColumnIndex (MediaStore.Audio.Media.DATA);
+            int songArtist = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            int songAudiobook = cursor.getColumnIndex(MediaStore.Audio.Media.IS_AUDIOBOOK);
+            int songAlbum = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+
+            Log.d("Download", "downloadfile: Path: " + Environment.DIRECTORY_AUDIOBOOKS);
+            do {
+                String curTitle = cursor.getString(SongTitle);
+                String curPath = cursor.getString(SongPath);
+                String curArtist = cursor.getString(songArtist);
+                String curAudiobook = cursor.getString(songAudiobook);
+                String curAlbum = cursor.getString(songAlbum);
+
+                Log.d("test", "getMusic: " + curArtist + " | "+ curTitle + " | " + curPath + " | " + curAudiobook + " | " + curAlbum);
+            } while (cursor.moveToNext());
+        }
     }
 
 
@@ -95,84 +145,12 @@ public class DashboardFragment extends Fragment {
                 .setLifecycleOwner(DashboardFragment.this)
                 .setQuery(query, Book.class)
                 .build();
-        firebaseListAdapter = new FirebaseListAdapter(options){
-            @Override
-            protected void populateView(View v, Object model, int position){
-                TextView bookTitle = v.findViewById(R.id.bookTitle);
-                TextView bookFile = v.findViewById(R.id.bookFile);
-                TextView bookTime = v.findViewById(R.id.bookTime);
-                TextView bookDownload = v.findViewById(R.id.bookDownloaded);
-                Button bookBtn = v.findViewById(R.id.bookDownloadBtn);
-                String[] downloadFileList = dataStorage.ReadDownloadedList(getContext(), userId);
 
-                final Book book = (Book) model;
-
-                bookTitle.setText(book.getTitle().toString());
-                bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
-                int totalSec = Integer.parseInt(book.getLocSec());
-                int hour = (totalSec%3600);
-                int min = ((totalSec-(3600*hour))%60);
-                int sec = (totalSec-((3600*hour)+(60*min)));
-                String time = String.format("%d:%d:%d", hour, min, sec);
-                bookTime.setText(time);
-                Log.d("Hello", "populateView setDownloaded: " + book.getDownloaded());
-                for (String line : downloadFileList)
-                    if (line.equals(book.getTitle())){
-                        Log.d("Hello", "populateView Line: " + line);
-                        Log.d("Hello", "populateView Get Title: " + book.getTitle());
-                        Log.d("Hello", "populateView setDownloaded: " + book.getDownloaded());
-                        book.setDownloaded("Downloaded");
-                        bookBtn.setEnabled(false);
-                    }
-                bookDownload.setText(book.getDownloaded());
-                bookBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        DownloadRefSetup(book, userId);
-                    }
-                });
-            }
-        };
+        firebaseListAdapter = new CloudListAdapterFirebase(options);
         listView.setAdapter(firebaseListAdapter);
         return root;
     }
-    private boolean DownloadRefSetup(final Book book, final String userId){
-        Log.d("Hello", "DownloadRefSetup: " + book.getFileNum() + " " + book.getTitle() + " " + book.getLocSec());
-        for(int fileNum = 0; fileNum < Integer.parseInt(book.getFileNum()); fileNum++) {
-            StorageReference = firebaseStorage.getInstance().getReference("users" + File.separator + userId + File.separator + book.getTitle() + File.separator);
-            ref = StorageReference.child(String.format("%d.mp3", fileNum));
-            Log.d("Hello", "DownloadRefSetup: " + ref.getPath());
-            Log.d("Hello", "DownloadRefSetup: " + StorageReference.getName() + " | " + Integer.toString(fileNum));
-            final int fileNumName = fileNum;
-//            Log.d("Hello", "DownloadRefSetup: " + StorageReference.getDownloadUrl().toString());
-            ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                @Override
-                public void onSuccess(Uri uri) {
-                    String dir = getContext().getFilesDir().getAbsolutePath();
-                    File FileDir = new File(dir + File.separator + mFirebaseUser.getUid() + File.separator + book.getTitle());
-                    FileDir.mkdirs();
-                    Log.d("Hello", "onSuccess X : " + FileDir.getAbsolutePath());
-                    Log.d("Hello", "onSuccess: URL " + uri.toString());
-                    Log.d("Hello", "onSuccess: ");
-                    downloadfile(getContext(), String.format("%d.mp3", fileNumName), FileDir.getAbsolutePath(), uri.toString());
-                    while (!(dataStorage.writeDownloadedList(book, getContext(), userId)));
-                }
-            });
-        }
-        return true;
-    }
-    private void downloadfile(Context context, String fileName, String destinationDirectory, String url){
 
-        DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse(url);
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalFilesDir(context, destinationDirectory, fileName);
-
-        downloadManager.enqueue(request);
-        Log.d("Hello", "downloadfile: Downloaded");
-    }
 
     private void removeDownloadFile() {
         try {

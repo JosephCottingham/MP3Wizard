@@ -16,17 +16,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class dataStorage {
 
-    public static boolean writeDownloadedList(final Book book, Context context, String userId){
+
+public class dataStorage {
+    static String TAG = "Hello";
+    public static boolean writeDownloadedListToSQL(final Book book, Context context, String userId){
         String dir = context.getFilesDir().getAbsolutePath();
 
         try {
             File FileDir = new File(userId + File.separator, "downloaded.txt");
             Log.d("tet", "ReadDownloadedList: " + FileDir.getAbsolutePath());
-            FileDir.mkdir();
+            FileDir.mkdirs();
             FileDir.createNewFile();
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(FileDir.getAbsolutePath(), Context.MODE_APPEND));
+            Log.d(TAG, "writeDownloadedList: OutputStreamWriter Created");
             outputStreamWriter.write(book.getTitle() + System.getProperty("line.separator"));
             outputStreamWriter.close();
             FileDir = new File(userId + File.separator + book.getTitle() + File.separator + "loc.txt");

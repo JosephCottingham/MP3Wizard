@@ -1,11 +1,26 @@
 package com.teambuild.mp3wizard;
 
+import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
+
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.FirebaseStorage;
+
+import java.io.File;
+
 public class Book {
     private String title;
     private String fileNum;
     private String currentFile;
     private String locSec;
     private String downloaded;
+    private String ID;
+    private String path;
 
     public Book(){
     }
@@ -26,12 +41,24 @@ public class Book {
         return fileNum;
     }
 
+    public int getFileNumAsInt(){
+        return Integer.parseInt(fileNum);
+    }
+
     public String getCurrentFile() {
         return currentFile;
     }
 
+    public int getCurrentFileAsInt(){
+        return Integer.parseInt(currentFile);
+    }
+
     public String getLocSec() {
         return locSec;
+    }
+
+    public long getLocSecAsLong(){
+        return Long.parseLong(currentFile);
     }
 
     public String getDownloaded(){
@@ -47,5 +74,25 @@ public class Book {
 
     public void setDownloaded(String downloaded){
         this.downloaded = downloaded;
+    }
+
+    public String getAsString(){
+        return (title + fileNum + currentFile + locSec);
+    }
+
+    public String getID(){
+        return ID;
+    }
+
+    public String getPath(){
+        return path;
+    }
+
+    public void setID(String ID){
+        this.ID = ID;
+    }
+
+    public void setPath(String path){
+        this.path = path;
     }
 }

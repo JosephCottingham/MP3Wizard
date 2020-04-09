@@ -26,6 +26,7 @@ import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.R;
 import com.teambuild.mp3wizard.ui.dashboard.DashboardFragment;
 import com.teambuild.mp3wizard.ui.dataStorage;
+import com.teambuild.mp3wizard.ui.localStorageDatabase;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,6 +36,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+
+import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class HomeFragment extends Fragment {
 
@@ -43,40 +47,47 @@ public class HomeFragment extends Fragment {
     private FirebaseUser mFirebaseUser;
     private ListView listView;
     private FirebaseListAdapter firebaseListAdapter;
+    private localStorageDatabase db;
 
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        homeViewModel =
-                ViewModelProviders.of(this).get(HomeViewModel.class);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.fragment_home, container, false);
+        Log.d("TEST", "onCreateView Home Fragment: " + getApplicationContext().getPackageName());
+        db = new localStorageDatabase(getApplicationContext());
+
+        root = listViewPopulate(root);
+
         final TextView textView = root.findViewById(R.id.text_home);
+
         homeViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
             }
         });
+
         return root;
     }
 
 
 
     protected View listViewPopulate(View root) {
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        final String userId = mFirebaseUser.getUid();
+        mFirebaseAuth = FirebaseAuth.getInstance(); // get current state
+        mFirebaseUser = mFirebaseAuth.getCurrentUser(); // get the user ifo
+        final String userId = mFirebaseUser.getUid(); // save the Id for storage/reteival
 //        storageRef = storage.getReference();
-
-        listView = root.findViewById(R.id.downloadListView);
-        Query query = FirebaseDatabase.getInstance().getReference().child(userId);
-
-        ArrayList<String> downloadList = new ArrayList<String>(Arrays.asList(dataStorage.ReadDownloadedList(getContext(), userId)));
-        ArrayAdapter<String> arrayAdapter =
-                new ArrayAdapter<String>(getContext(), R.layout.book_info_downloads, downloadList);
-        listView.setAdapter(arrayAdapter);
-
-        listView.setAdapter(firebaseListAdapter);
+        listView = root.findViewById(R.id.downloadListView); // view to be populated with list
+        Query query = FirebaseDatabase.getInstance().getReference().child(userId); // the query for firebase in data/storage
+        ArrayList<Book> downloadList = db.getAllDownloadData(); // data gathered from local SQL database in order to populate view
+        for(int x = 0; x < downloadList.size(); x++)
+            Log.d("TEST", "listViewPopulate: " + downloadList.get(x).getAsString());
+        Log.d("TEST", "listViewPopulate: " + downloadList.size());
+        for (int x = 0; x < downloadList.size(); x++)
+            Log.d("POP", "listViewPopulate: " + downloadList.get(x).getTitle());
+        DownloadBookAdapter downloadBookAdapter =
+                new DownloadBookAdapter(getContext(), downloadList); // create adapter for listview
+        listView.setAdapter(downloadBookAdapter); // assign to listview
         return root;
     }
 
