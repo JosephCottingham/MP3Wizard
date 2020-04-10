@@ -58,7 +58,7 @@ public class Book {
     }
 
     public long getLocSecAsLong(){
-        return Long.parseLong(currentFile);
+        return Long.parseLong(locSec);
     }
 
     public String getDownloaded(){
@@ -77,7 +77,7 @@ public class Book {
     }
 
     public String getAsString(){
-        return (title + fileNum + currentFile + locSec);
+        return (title + " " + fileNum + " " + currentFile + " " + locSec);
     }
 
     public String getID(){

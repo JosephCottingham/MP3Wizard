@@ -151,17 +151,4 @@ public class DashboardFragment extends Fragment {
         return root;
     }
 
-
-    private void removeDownloadFile() {
-        try {
-            String dir = getContext().getFilesDir().getAbsolutePath();
-            File FileDir = new File(dir + "/" + mFirebaseUser.getUid() + "/", "downloaded.txt");
-            PrintWriter writer = new PrintWriter(FileDir);
-            writer.close();
-
-            Log.d("Hello", "removeDownloadFile: ");
-        } catch (IOException ex){
-
-        }
-    }
 }

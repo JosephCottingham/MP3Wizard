@@ -73,11 +73,15 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
 
         bookTitle.setText(book.getTitle().toString());
         bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
-        int totalSec = Integer.parseInt(book.getLocSec());
-        int hour = (totalSec%3600);
-        int min = ((totalSec-(3600*hour))%60);
-        int sec = (totalSec-((3600*hour)+(60*min)));
-        String time = String.format("%d:%d:%d", hour, min, sec);
+        long totalSec = book.getLocSecAsLong();
+        int hour = (int)(totalSec/3600);
+        int min = (int)((totalSec-(3600*hour))/60);
+        int sec = (int)(totalSec-((3600*hour)+(60*min)));
+        String minS = String.valueOf(min);
+        String secS = String.valueOf(sec);
+        if (min < 10) minS = "0" + minS;
+        if (sec < 10) secS += "0" + secS;
+        String time = String.format("%s:%s:%s", hour, minS, secS);
         bookTime.setText(time);
         Log.d("Hello", "populateView setDownloaded: " + book.getDownloaded());
         bookDownload.setText(book.getDownloaded());

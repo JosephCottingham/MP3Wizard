@@ -7,6 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.teambuild.mp3wizard.Book;
 
 import java.io.File;
@@ -85,9 +93,10 @@ public class localStorageDatabase extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     Book book = new Book(cursor.getString(cursor.getColumnIndex("title")),
-                            String.valueOf(cursor.getInt(cursor.getColumnIndex("currentFile"))),
                             String.valueOf(cursor.getInt(cursor.getColumnIndex("fileNum"))),
-                            String.valueOf(cursor.getLong(cursor.getColumnIndex("locSec"))),"downloaded");
+                            String.valueOf(cursor.getLong(cursor.getColumnIndex("locSec"))),
+                            String.valueOf(cursor.getInt(cursor.getColumnIndex("currentFile"))),
+                            "downloaded");
                             book.setID(String.valueOf(cursor.getString(cursor.getColumnIndex("ID"))));
                             book.setPath(String.valueOf(cursor.getString(cursor.getColumnIndex("path"))));
                     arrayList.add(book);
@@ -163,5 +172,31 @@ public class localStorageDatabase extends SQLiteOpenHelper {
             }
             return false;
         }
+    }
+
+    public void updateCurLoc(Book book){
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("title", book.getTitle());
+        contentValues.put("currentFile", Integer.valueOf(book.getCurrentFile()));
+        contentValues.put("fileNum", Integer.valueOf(book.getFileNum()));
+        contentValues.put("locSec", Long.valueOf(book.getLocSec()));
+        contentValues.put("ID", book.getID());
+        contentValues.put("path", book.getPath());
+
+        sqLiteDatabase.update(TABLE_NAME, contentValues, "ID = ?", new String[] {book.getID()});
+        try {
+            FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
+            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+            String userId = mFirebaseAuth.getCurrentUser().getUid();
+            mDatabase.child(userId).child(book.getTitle()).child("locSec").setValue(book.getLocSec());
+        } catch (Exception e){
+            Log.d("TEST", "updateCurLoc: Error: " + e.getMessage());
+        }
+    }
+
+    public void removeBook(Book book){
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        sqLiteDatabase.delete(TABLE_NAME,"ID = ?", new String[] {book.getID()});
     }
 }
