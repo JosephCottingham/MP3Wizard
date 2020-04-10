@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
                 if(mFirebaseUser != null){
                     Toast.makeText(MainActivity.this,"You are logged in",Toast.LENGTH_SHORT).show();
                     Intent i = new Intent(MainActivity.this, HomeActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
                 } else {
                     Toast.makeText(MainActivity.this,"Please Login",Toast.LENGTH_SHORT).show();
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.makeText(MainActivity.this, "Login Error, please try again", Toast.LENGTH_SHORT).show();
                             } else {
                                 Intent intToHome = new Intent(MainActivity.this,HomeActivity.class);
+                                intToHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intToHome);
                             }
                         }

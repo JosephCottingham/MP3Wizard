@@ -49,7 +49,8 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private FirebaseStorage firebaseStorage;
-    private StorageReference ref;
+    private StorageReference audioRef;
+    private StorageReference iconRef;
     private StorageReference storageReference;
     private localStorageDatabase db;
 
@@ -116,8 +117,9 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
         Log.d("Download", "DownloadRefSetup: " + book.getFileNum() + " " + book.getTitle() + " " + book.getLocSec());
         for(int fileNum = 1; fileNum <= Integer.parseInt(book.getFileNum()); fileNum++) {
             storageReference = firebaseStorage.getInstance().getReference("users" + File.separator + userId + File.separator + book.getTitle());
-            ref = storageReference.child(String.format("%d.mp3", fileNum));
-            Log.d("Download", "DownloadRefSetup: " + ref.getPath());
+            audioRef = storageReference.child(String.format("%d.mp3", fileNum));
+            iconRef = storageReference.child("icon.png");
+            Log.d("Download", "DownloadRefSetup: " + audioRef.getPath());
 
             File rootPath = new File(getApplicationContext().getFilesDir() + File.separator + book.getTitle());
             if (!rootPath.exists()){
@@ -125,30 +127,52 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
             }
 
             Log.d(TAG, "DownloadRefSetup: File Created");
-            final File localFile = new File(rootPath, String.format("%d.mp3", fileNum));
-            Log.d(TAG, "DownloadRefSetup: final path abs : " + localFile.getAbsolutePath());
-            Log.d(TAG, "DownloadRefSetup: Final path: " + localFile.toString());
+            final File localAudioFile = new File(rootPath, String.format("%d.mp3", fileNum));
+            final File localIconFile = new File(rootPath, "icon.png");
+            Log.d(TAG, "DownloadRefSetup: final path abs : " + localAudioFile.getAbsolutePath());
+            Log.d(TAG, "DownloadRefSetup: Final path: " + localAudioFile.toString());
             Log.d(TAG, "DownloadRefSetup: root path: " + rootPath.toString());
             final int FileNumNum = fileNum;
-            Log.d(TAG, "DownloadRefSetup: REF Path: " + ref.getPath());
-            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + ref.getBucket());
-            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + ref.getDownloadUrl().toString());
+            Log.d(TAG, "DownloadRefSetup: REF Path: " + audioRef.getPath());
+            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getBucket());
+            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getDownloadUrl().toString());
 
 
-            ref.getFile(localFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+            audioRef.getFile(localAudioFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
                 public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
                     Log.d(TAG, "onProgress: getBytesTransferred: " + taskSnapshot.getBytesTransferred());
                     Log.d(TAG, "onProgress: getTotalByteCount: " + taskSnapshot.getTotalByteCount());
 
-                    double progress = 100.0 * (taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                    double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
                     Log.d(TAG, "onProgress: Current Status: " + progress);
                 }
             }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                     Log.d(TAG, "onSuccess: Downloaded");
-                    Log.d(TAG, "onSuccess: " + localFile.toString());
+                    Log.d(TAG, "onSuccess: " + localAudioFile.toString());
+                    iconRef.getFile(localIconFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
+                            Log.d(TAG, "onProgress: getBytesTransferred: " + taskSnapshot.getBytesTransferred());
+                            Log.d(TAG, "onProgress: getTotalByteCount: " + taskSnapshot.getTotalByteCount());
+
+                            double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
+                            Log.d(TAG, "onProgress: Current Status: " + progress);
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                            Log.d(TAG, "onSuccess: Downloaded");
+                            Log.d(TAG, "onSuccess: " + localIconFile.toString());
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d(TAG, "onFailure: " + ";local tem file not created  created " + e.toString());
+                        }
+                    });
                     db.addBook(book.getTitle(), book.getCurrentFileAsInt(), book.getFileNumAsInt(), book.getLocSecAsLong());
                 }
             }).addOnFailureListener(new OnFailureListener() {

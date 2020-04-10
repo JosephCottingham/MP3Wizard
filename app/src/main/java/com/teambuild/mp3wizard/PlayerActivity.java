@@ -6,17 +6,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
@@ -44,6 +47,7 @@ public class PlayerActivity extends AppCompatActivity {
     TextView elapsedTimeLabel;
     TextView remainingTimeLabel;
     MediaPlayer mp;
+    ImageView icon;
     int totalTime;
     localStorageDatabase db;
 
@@ -57,6 +61,7 @@ public class PlayerActivity extends AppCompatActivity {
         playBtn = (Button) findViewById(R.id.playBtn);
         elapsedTimeLabel = (TextView) findViewById(R.id.elapsedTimeLabel);
         remainingTimeLabel = (TextView) findViewById(R.id.remainingTimeLabel);
+        icon = (ImageView) findViewById(R.id.audioIcon);
         Intent in = getIntent();
         Bundle b = in.getExtras();
         final String bookID = b.getString("bookID");
@@ -78,6 +83,8 @@ public class PlayerActivity extends AppCompatActivity {
 
 
             File audioBookFile = new File(book.getPath(), String.format("%s.mp3", book.getCurrentFile()));
+            File audioBookIconFile = new File(book.getPath(), "icon.png");
+            if (audioBookFile.exists()) icon.setImageBitmap(BitmapFactory.decodeFile(audioBookIconFile.getAbsolutePath()));
             Log.d("Player", "onCreate: Path:" + audioBookFile.getAbsolutePath());
             mp = MediaPlayer.create(this, Uri.parse(audioBookFile.getAbsolutePath()));
         }
@@ -260,6 +267,7 @@ public class PlayerActivity extends AppCompatActivity {
                             b.putString("bookID", book.getID());
                             playerIntent.putExtras(b);
                             startActivity(playerIntent);
+                            finish();
                         }
                     });
                     // show the popup window

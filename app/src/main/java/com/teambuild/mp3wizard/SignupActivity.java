@@ -99,7 +99,7 @@ public class SignupActivity extends AppCompatActivity {
                 } else {
                     sendNewUserData(userData, mFirebaseAuth);
                     // moves to main page
-                    startActivity(new Intent(SignupActivity.this, HomeActivity.class));
+                    startActivity(new Intent(SignupActivity.this, HomeActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
                 }
             }
         });

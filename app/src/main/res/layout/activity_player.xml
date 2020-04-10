@@ -9,8 +9,9 @@
     android:gravity="center_horizontal">
 
     <ImageView
-        android:layout_width="318dp"
-        android:layout_height="348dp"
+        android:id="@+id/audioIcon"
+        android:layout_width="325dp"
+        android:layout_height="349dp"
         android:layout_marginTop="60dp"
         android:src="@mipmap/ic_audio_icon" />
 
