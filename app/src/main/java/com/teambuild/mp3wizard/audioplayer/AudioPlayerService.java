@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -14,6 +18,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -22,10 +27,14 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.teambuild.mp3wizard.Book;
+import com.teambuild.mp3wizard.PlayerActivity;
+import com.teambuild.mp3wizard.R;
 import com.teambuild.mp3wizard.ui.localStorageDatabase;
 
 import org.w3c.dom.Text;
+
 
 public class AudioPlayerService extends Service implements AudioPlayerServiceInterface, AudioManager.OnAudioFocusChangeListener{
 	private String TAG = "AudioPlayer";
@@ -47,6 +56,8 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	private Thread passingTime;
 
 	private localStorageDatabase db;
+
+	NotificationManager notificationManager;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -84,17 +95,30 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	    if (successfullyRetrievedAudioFocus()) {
             state = PLAYING;
             mMediaPlayer.start();
+			CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_play_foreground, 0);
         }
 	}
 
 	public synchronized void play(int position) {
 		File file = mNowPlaying.playGet(position);
 		playFetched(file.getAbsolutePath(), true);
+		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_play_foreground, 0);
 	}
 
 	public synchronized void playNext() {
 		if(mNowPlaying.next() != null) {
 			playFetched(mNowPlaying.next().getPath(), true);
+		}
+	}
+
+	public void createNotificationChannel(){
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+			NotificationChannel channel = new NotificationChannel(CreateNotification.CHANNEL_ID, "Dev", NotificationManager.IMPORTANCE_LOW);
+
+			notificationManager = getSystemService(NotificationManager.class);
+			if(notificationManager != null){
+				notificationManager.createNotificationChannel(channel);
+			}
 		}
 	}
 
@@ -112,6 +136,9 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 					db = new localStorageDatabase(getApplicationContext());
 					Log.d(TAG, "onPrepared: OnPrepared");
 					int totalTime = mp.getDuration();
+
+					NotificationConfig();
+
 					positionBar.setMax(totalTime);
 					positionBar.setProgress((int) mNowPlaying.currentBook.getLocSecAsLong());
 					setSeekBarTracker();
@@ -201,6 +228,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	public void pause() {
 		state = PAUSED;
 		mMediaPlayer.pause();
+		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_pause_foreground, 0);
 	}
 
 	public int changeState() {
@@ -308,4 +336,23 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
             }
         }
     }
+
+    private void NotificationConfig(){
+		createNotificationChannel();
+		registerReceiver(notificationBroadcastReceiver, new IntentFilter("NotificationAction"));
+
+	}
+
+	BroadcastReceiver notificationBroadcastReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getExtras().getString("actionname");
+
+			switch (action) {
+				case CreateNotification.ACTION_PLAY:
+					changeState();
+					break;
+			}
+		}
+	};
 }

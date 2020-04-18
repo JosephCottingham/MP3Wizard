@@ -11,4 +11,3 @@ public interface AudioPlayerServiceInterface {
 	public void play(int position);
 	public void pause();
 }
- 
