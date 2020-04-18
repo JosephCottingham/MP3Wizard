@@ -58,9 +58,7 @@ public class PlayerActivity extends AppCompatActivity {
     // Interface
     Button playBtn;
     SeekBar positionBar;
-    SeekBar volumeBar;
-    TextView elapsedTimeLabel;
-    TextView remainingTimeLabel;
+    TextView elapsedTimeLabel, remainingTimeLabel;
     ImageView icon;
 
     // Player System
@@ -83,6 +81,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         playBtn = (Button) findViewById(R.id.playBtn);
         playBtn.setClickable(false);
+
         icon = (ImageView) findViewById(R.id.audioIcon);
         Intent in = getIntent();
         Bundle b = in.getExtras();
@@ -92,6 +91,9 @@ public class PlayerActivity extends AppCompatActivity {
 
         db = new localStorageDatabase(getApplicationContext());
         book = db.getBookWithID(bookID);
+
+        ((TextView) findViewById(R.id.BookTitleLabel)).setText(book.getTitle());
+
         CurLocEqual(book);
 
 
@@ -209,10 +211,10 @@ public class PlayerActivity extends AppCompatActivity {
 
                     switch (currentState){
                         case AudioPlayerService.PLAYING:
-                            playBtn.setBackgroundResource(R.drawable.ic_pause_foreground);
+                            playBtn.setBackgroundResource(R.drawable.ic_pause_button_white_trim_foreground);
                             break;
                         case AudioPlayerService.PAUSED:
-                            playBtn.setBackgroundResource(R.drawable.ic_play_foreground);
+                            playBtn.setBackgroundResource(R.drawable.ic_play_button_white);
                             break;
                     }
 

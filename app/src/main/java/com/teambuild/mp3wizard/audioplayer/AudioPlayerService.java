@@ -95,14 +95,14 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	    if (successfullyRetrievedAudioFocus()) {
             state = PLAYING;
             mMediaPlayer.start();
-			CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_play_foreground, 0);
+			CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_simple_pause_button_white_foreground, 0);
         }
 	}
 
 	public synchronized void play(int position) {
 		File file = mNowPlaying.playGet(position);
 		playFetched(file.getAbsolutePath(), true);
-		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_play_foreground, 0);
+		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_simple_pause_button_white_foreground, 0);
 	}
 
 	public synchronized void playNext() {
@@ -228,7 +228,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	public void pause() {
 		state = PAUSED;
 		mMediaPlayer.pause();
-		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_pause_foreground, 0);
+		CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_simple_play_button_white_foreground, 0);
 	}
 
 	public int changeState() {
