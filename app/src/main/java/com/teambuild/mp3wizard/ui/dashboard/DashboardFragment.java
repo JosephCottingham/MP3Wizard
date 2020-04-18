@@ -73,30 +73,7 @@ public class DashboardFragment extends Fragment {
             Log.d("TEST", "printDB: DBRow " + String.valueOf(x) + ": " + book.getTitle() + " | " + book.getCurrentFile() + " | " + book.getFileNum() + " | " + book.getLocSec() + " | " + book.getID());
         }
         final TextView textView = root.findViewById(R.id.text_dashboard);
-        Button MediaPrintDataBtn = root.findViewById(R.id.MediaPrintDataBtn);
-        Button MediaOpenBtn = root.findViewById(R.id.playtest);
 
-        MediaOpenBtn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(getContext(), PlayerActivity.class).putExtra("bookID", "TEST"));
-            }
-        });
-
-        MediaPrintDataBtn.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.Q)
-            @Override
-            public void onClick(View v){
-                getMusic();
-            }
-            public void printDB(){
-                ArrayList<Book> arrayList = db.getAllDownloadData();
-                for (int x = 0; x < arrayList.size(); x++){
-                    Book book = arrayList.get(x);
-                    Log.d("TEST", "printDB: DBRow " + String.valueOf(x) + ": " + book.getTitle() + " | " + book.getCurrentFile() + " | " + book.getFileNum() + " | " + book.getLocSec());
-                }
-            }
-        });
         dashboardViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
