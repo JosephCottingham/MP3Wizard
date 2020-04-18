@@ -10,6 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".PlayerActivity"></activity>
+        <service android:name="com.teambuild.mp3wizard.audioplayer.AudioPlayerService" android:enabled="true"></service>
         <activity
             android:name=".HomeActivity"
             android:label="@string/title_activity_home" />
