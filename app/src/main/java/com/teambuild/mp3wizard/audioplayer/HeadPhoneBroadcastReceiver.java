@@ -11,7 +11,7 @@ public class HeadPhoneBroadcastReceiver extends BroadcastReceiver {
 	private static final String IN = "IN";
 	private static final String NOT_IN = "NOT IN";
 	
-	private MusicPlayerService mMusicPlayerService;
+	private AudioPlayerService mAudioPlayerService;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -22,8 +22,8 @@ public class HeadPhoneBroadcastReceiver extends BroadcastReceiver {
 			
 			if (state == 0){
 				Log.d("HEADSET", NOT_IN);
-				if (mMusicPlayerService != null && mMusicPlayerService.getState() == MusicPlayerService.PLAYING)
-					mMusicPlayerService.pause();
+				if (mAudioPlayerService != null && mAudioPlayerService.getState() == AudioPlayerService.PLAYING)
+					mAudioPlayerService.pause();
 			}
 			else{
 				Log.d("HEADSET", IN);
@@ -31,8 +31,8 @@ public class HeadPhoneBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 	
-	public void registerMusicPlayerService(MusicPlayerService musicPlayerService) {
-		if (mMusicPlayerService != null)
-			mMusicPlayerService = musicPlayerService;
+	public void registerMusicPlayerService(AudioPlayerService musicPlayerService) {
+		if (mAudioPlayerService != null)
+			mAudioPlayerService = musicPlayerService;
 	}
 }
