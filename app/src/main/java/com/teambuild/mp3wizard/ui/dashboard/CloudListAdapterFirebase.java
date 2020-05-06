@@ -132,7 +132,6 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
             Log.d(TAG, "DownloadRefSetup: final path abs : " + localAudioFile.getAbsolutePath());
             Log.d(TAG, "DownloadRefSetup: Final path: " + localAudioFile.toString());
             Log.d(TAG, "DownloadRefSetup: root path: " + rootPath.toString());
-            final int FileNumNum = fileNum;
             Log.d(TAG, "DownloadRefSetup: REF Path: " + audioRef.getPath());
             Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getBucket());
             Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getDownloadUrl().toString());
@@ -173,7 +172,7 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
                             Log.d(TAG, "onFailure: " + ";local tem file not created  created " + e.toString());
                         }
                     });
-                    db.addBook(book.getTitle(), book.getCurrentFileAsInt(), book.getFileNumAsInt(), book.getLocSecAsLong());
+                    db.addBook(book);
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override

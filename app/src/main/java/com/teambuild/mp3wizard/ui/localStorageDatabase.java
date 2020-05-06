@@ -71,6 +71,21 @@ public class localStorageDatabase extends SQLiteOpenHelper {
         return true;
     }
 
+    public boolean addBook(Book book){
+        // Retreive database
+        SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("title", book.getTitle());
+        contentValues.put("currentFile", Integer.valueOf(book.getCurrentFile()));
+        contentValues.put("fileNum", Integer.valueOf(book.getFileNum()));
+        contentValues.put("locSec", Long.valueOf(book.getLocSec()));
+        contentValues.put("ID", createNewID(sqLiteDatabase));
+        contentValues.put("path", (getApplicationContext().getFilesDir() + File.separator + book.getTitle()));
+
+        sqLiteDatabase.insert(TABLE_NAME, null, contentValues);
+        return true;
+    }
+
     public ArrayList<String> getBookTitles(){
         // retreive database
         ArrayList<String> arrayList = new ArrayList<String>();
@@ -141,19 +156,22 @@ public class localStorageDatabase extends SQLiteOpenHelper {
                 n--;
             }
         }
-        if (checkIfValidID(r.toString(), sqLiteDatabase))
+        if (checkIfValidID(r.toString()))
             return r.toString();
         else
             return createNewID(sqLiteDatabase);
     }
 
-    private boolean checkIfValidID(String testCase, SQLiteDatabase sqLiteDatabase){
+    private boolean checkIfValidID(String testCase){
+        Log.d(TAG, "checkIfValidID: Test Case: " + testCase);
+        // somthing wrong here
         Cursor cursor = this.getReadableDatabase().rawQuery("select ID from " + TABLE_NAME, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    if(cursor.getString(cursor.getColumnIndex("ID")).equals(testCase));
-                        return false;
+//                    if (cursor.getString(cursor.getColumnIndex("ID"))==null)
+//                        break;
+                    if(cursor.getString(cursor.getColumnIndex("ID")).equals(testCase)) return false;
                 } while (cursor.moveToNext());
             }
         }

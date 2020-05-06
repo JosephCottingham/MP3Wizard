@@ -182,7 +182,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 			public void run() {
 				while (mMediaPlayer != null){
 					try {
-						if (mMediaPlayer.getCurrentPosition() < mMediaPlayer.getDuration()){
+						if (mMediaPlayer.getCurrentPosition() > mMediaPlayer.getDuration()){
 							// TODO move to next file/ end
 						}
 						if (Math.abs((mMediaPlayer.getCurrentPosition()/1000)-Integer.valueOf(mNowPlaying.currentBook.getLocSec()))>30){
