@@ -23,12 +23,12 @@ import android.widget.TextView;
 
 import com.teambuild.mp3wizard.audioplayer.AudioPlayerService;
 import com.teambuild.mp3wizard.audioplayer.AudioServiceConnectionSingleton;
+import com.teambuild.mp3wizard.repository.RepositorySingleton;
 import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 import java.io.File;
 
 public class PlayerActivity extends AppCompatActivity {
-    private PlayerViewModel playerViewModel;
 
     String TAG = "AudioPlayer";
 
@@ -39,49 +39,71 @@ public class PlayerActivity extends AppCompatActivity {
     TextView elapsedTimeLabel, remainingTimeLabel, titleLabel;
     ImageView icon;
 
+    RepositorySingleton repository;
+
     int totalTime;
     int curTime;
 
     String bookID;
-
+    private Book book;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_player);
-        playerViewModel = new PlayerViewModel();
 
         Intent in = getIntent();
         Bundle b = in.getExtras();
         bookID = b.getString("bookID");
 
+        repository = RepositorySingleton.getInstance();
+        audioServiceConnection = AudioServiceConnectionSingleton.getInstance();
+
+        book = repository.getLocalBookByID(bookID);
+
+        //        // This is totalTime/curTime for the media being displayed not that which is being played
+        //totalTime = playerViewModel.getLocalTotalTimeById(bookID);
+        curTime = book.getLocSecAsInt();
+
+        // Connect GUI
         playBtn = (Button) findViewById(R.id.playBtn);
         playBtn.setClickable(false);
+
         elapsedTimeLabel = (TextView) findViewById(R.id.elapsedTimeLabel);
         remainingTimeLabel = (TextView) findViewById(R.id.remainingTimeLabel);
         positionBar = (SeekBar) findViewById(R.id.positionBar);
+
         icon = (ImageView) findViewById(R.id.audioIcon);
         titleLabel = findViewById(R.id.BookTitleLabel);
 
-        // This is totalTime/curTime for the media being displayed not that which is being played
-//        totalTime = playerViewModel.getLocalTotalTimeById(bookID);
-        totalTime = 900004;
-        curTime = playerViewModel.getLocalPositionById(bookID);
-
         // set GUI to show open book (Does not modify or affect Playing book)
-        titleLabel.setText(playerViewModel.getTitleById(bookID));
+        titleLabel.setText(book.getTitle());
         elapsedTimeLabel.setText(createTimeLabel(curTime));
         remainingTimeLabel.setText(createTimeLabel(totalTime-curTime));
         positionBar.setMax(totalTime);
-        positionBar.setProgress(curTime);
 
-        playBtnClickListener();
+
+        if (!repository.areCurrentCloudAndLocalLocationsEqual(bookID)){
+            cloudVsLocalPopup();
+        }
+
         setProgressBarListener();
 
+        audioServiceConnection.setGUI(positionBar, elapsedTimeLabel, remainingTimeLabel);
+
+
+        if (!audioServiceConnection.isCurrentlyPlaying(bookID)) {
+            Log.d(TAG, "playButton: reset data");
+            Book tempBook = repository.getLocalBookByID(bookID);
+            audioServiceConnection.setBook(tempBook);
+        }
+
+        playBtnClickListener();
+
         // Set Icon
-        Bitmap iconBM = playerViewModel.getIconBitmapById(bookID);
-        if (iconBM != null)
-            icon.setImageBitmap(iconBM);
+        File audioBookIconFile = new File(repository.getLocalBookByID(bookID).getPath(), "icon.png");
+        if (audioBookIconFile.exists())
+            icon.setImageBitmap(BitmapFactory.decodeFile(audioBookIconFile.getAbsolutePath()));
 
     }
 
@@ -91,23 +113,17 @@ public class PlayerActivity extends AppCompatActivity {
         playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: Pressed");
-                switch (playerViewModel.playButton(bookID, positionBar, elapsedTimeLabel, remainingTimeLabel)){
-                    case AudioPlayerService.PLAYING:
-                        playBtn.setBackgroundResource(R.drawable.ic_pause_button_white_trim_foreground);
-                        break;
-                    case AudioPlayerService.PAUSED:
-                        playBtn.setBackgroundResource(R.drawable.ic_play_button_white);
-                        break;
-                    case AudioPlayerService.WAITING:
-                        playBtn.setBackgroundResource(R.drawable.ic_pause_button_white_trim_foreground);
-                        cloudVsLocalPopup();
-                        break;
-                }
+                    switch (audioServiceConnection.toggleAudioPlayState()){
+                        case AudioPlayerService.PLAYING:
+                            playBtn.setBackgroundResource(R.drawable.ic_pause_button_white_trim_foreground);
+                            break;
+                        case AudioPlayerService.PAUSED:
+                            playBtn.setBackgroundResource(R.drawable.ic_play_button_white);
+                            break;
+                    }
             }
         });
         playBtn.setClickable(true);
-
     }
 
     private void cloudVsLocalPopup(){
@@ -123,21 +139,21 @@ public class PlayerActivity extends AppCompatActivity {
         final Button cloudBtn = pView.findViewById(R.id.cloudBtn);
         TextView locTextView = pView.findViewById(R.id.LocLocationTextView);
         TextView cloTextView = pView.findViewById(R.id.CloudLocationTextView);
-        locTextView.setText(String.format("Local Location: %s", createTimeLabel(playerViewModel.getSQLITELoc(bookID))));
-        cloTextView.setText(String.format("Cloud Location:  %s", createTimeLabel(playerViewModel.getFirebaseLoc(bookID))));
+        locTextView.setText(String.format("Local Location: %s", createTimeLabel(repository.getSQLITELoc(bookID))));
+        cloTextView.setText(String.format("Cloud Location:  %s", createTimeLabel(repository.getFirebaseLoc(bookID))));
         locationPopupWindow.showAtLocation(getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
 
         localBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                playerViewModel.setCurrentTimePopupResponse(0, bookID);
+                repository.setLocationToLocalValue(bookID);
                 locationPopupWindow.dismiss();
             }
         });
         cloudBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                playerViewModel.setCurrentTimePopupResponse(1, bookID);
+                repository.setLocationToCloudValue(bookID);
                 locationPopupWindow.dismiss();
                 Intent playerIntent = new Intent(PlayerActivity.this, PlayerActivity.class);
                 Bundle b = new Bundle();
@@ -163,9 +179,6 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void setProgressBarListener() {
-        // Position Bar
-        positionBar.setMax(totalTime);
-
         elapsedTimeLabel.addTextChangedListener(
                 new TextWatcher() {
                     @Override
@@ -208,4 +221,5 @@ public class PlayerActivity extends AppCompatActivity {
                 }
         );
     }
+
 }

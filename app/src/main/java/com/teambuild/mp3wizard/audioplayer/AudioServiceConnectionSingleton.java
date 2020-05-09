@@ -22,7 +22,6 @@ public class AudioServiceConnectionSingleton {
 
     private static AudioServiceConnectionSingleton inst;
 
-
     private AudioPlayerService mService;
     private AudioPlayerServiceBinder mBinder;
     private ServiceConnection mConnection;

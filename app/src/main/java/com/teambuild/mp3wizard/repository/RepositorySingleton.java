@@ -64,7 +64,8 @@ public class RepositorySingleton {
         return localSQLiteDatabase.getBookWithID(ID);
     }
 
-    public boolean areCurrentCloudAndLocalLocationsEqual(Book book) {
+    public boolean areCurrentCloudAndLocalLocationsEqual(String bookID) {
+        Book book = getLocalBookByID(bookID);
         Log.d("AudioSystems", "areCurrentCloudAndLocalLocationsEqual: Firebase: " + cloudFirebaseDatabase.getFirebaseLocSec(book.getTitle()));
         Log.d("AudioSystems", "areCurrentCloudAndLocalLocationsEqual: SQLITEbase: " + book.getLocSecAsInt());
 

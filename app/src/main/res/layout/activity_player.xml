@@ -34,21 +34,21 @@
             android:id="@+id/elapsedTimeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:textSize="8pt"
             android:layout_marginLeft="40dp"
-            android:text="0:11" />
+            android:text="0:11"
+            android:textColor="@color/white"
+            android:textSize="8pt"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/remainingTimeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="200dp"
+            android:text="-1:49"
             android:textColor="@color/white"
-            android:textStyle="bold"
             android:textSize="8pt"
-            android:layout_marginLeft="240dp"
-            android:text="-1:49" />
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView

@@ -57,6 +57,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 
 	@Override
 	public IBinder onBind(Intent intent) {
+		repository = RepositorySingleton.getInstance(); //TODO Try this with old version
 		mAudioPlayerServiceBinder = new AudioPlayerServiceBinder(this, this);
 		state = PLAYING;
 
@@ -125,9 +126,9 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	}
 
 	private synchronized void playFetched(final String path, final boolean beginPlaying) {
-//		state = PLAYING;
-//		mMediaPlayer.stop();
-//		mMediaPlayer.reset();
+		state = PLAYING;
+		mMediaPlayer.stop();
+		mMediaPlayer.reset();
 		try {
 			Log.d(TAG, "playFetched: Path: " + path);
 			mMediaPlayer.setDataSource(path);
@@ -177,7 +178,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 		String minS = String.valueOf(min);
 		String secS = String.valueOf(sec);
 		if (min < 10) minS = "0" + minS;
-		if (sec < 10) secS += "0" + secS;
+		if (sec < 10) secS = "0" + secS;
 		return String.format("%s:%s:%s", hour, minS, secS);
 	}
 
