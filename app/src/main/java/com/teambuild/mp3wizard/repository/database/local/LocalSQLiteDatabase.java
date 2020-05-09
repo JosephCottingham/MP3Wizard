@@ -1,4 +1,4 @@
-package com.teambuild.mp3wizard.ui;
+package com.teambuild.mp3wizard.repository.database.local;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -6,35 +6,30 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
-import androidx.annotation.NonNull;
+import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 import com.teambuild.mp3wizard.Book;
+import com.teambuild.mp3wizard.R;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 
 import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
-public class localStorageDatabase extends SQLiteOpenHelper {
+public class LocalSQLiteDatabase extends SQLiteOpenHelper {
     static String TAG = "SQL";
     // This database holds all currently downloaded MP3 Stories
     private static final String DATABASE_NAME = "local_storage";
     private static final String TABLE_NAME = "table_name";
 
-    public localStorageDatabase(Context context){
-        super(context, DATABASE_NAME, null, 1);
+    public LocalSQLiteDatabase(){
+        super(getApplicationContext(), DATABASE_NAME, null, 1);
     }
     @Override
     public void onCreate(SQLiteDatabase db){
@@ -217,4 +212,9 @@ public class localStorageDatabase extends SQLiteOpenHelper {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         sqLiteDatabase.delete(TABLE_NAME,"ID = ?", new String[] {book.getID()});
     }
+
+    public LocalListAdapterSQLITE getLocalListAdapterSQLITE(Context context) {
+        return new LocalListAdapterSQLITE(context, getAllDownloadData());
+    }
+
 }

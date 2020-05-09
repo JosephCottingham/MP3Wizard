@@ -13,7 +13,6 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.teambuild.mp3wizard.R;
-import com.teambuild.mp3wizard.ui.notifications.NotificationsViewModel;
 
 public class SettingsFragment extends Fragment {
 

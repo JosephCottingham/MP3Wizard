@@ -2,12 +2,9 @@ package com.teambuild.mp3wizard.audioplayer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,11 +26,9 @@ import android.widget.Toast;
 
 
 import com.teambuild.mp3wizard.Book;
-import com.teambuild.mp3wizard.PlayerActivity;
 import com.teambuild.mp3wizard.R;
-import com.teambuild.mp3wizard.ui.localStorageDatabase;
-
-import org.w3c.dom.Text;
+import com.teambuild.mp3wizard.repository.RepositorySingleton;
+import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 
 public class AudioPlayerService extends Service implements AudioPlayerServiceInterface, AudioManager.OnAudioFocusChangeListener{
@@ -41,6 +36,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 
 	public final static int PAUSED = 0;
 	public final static int PLAYING = 1;
+	public final static int WAITING = 2;
 
 	private int state;
 
@@ -55,7 +51,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	private AsyncTask<Void, Void, Void> seekBarChanger;
 	private Thread passingTime;
 
-	private localStorageDatabase db;
+	private RepositorySingleton repository;
 
 	NotificationManager notificationManager;
 
@@ -90,11 +86,17 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 		playFetched(mNowPlaying.getCurrentlyPlaying().getAbsolutePath(), false);
 	}
 
+	public Book getCurrentQueuedBook(){
+		return mNowPlaying.currentBook;
+	}
+
 
 	public synchronized void play() {
+		Log.d("AudioSystem", "play: ");
 	    if (successfullyRetrievedAudioFocus()) {
             state = PLAYING;
-            mMediaPlayer.start();
+			Log.d("AudioSystem", "play: ");
+			mMediaPlayer.start();
 			CreateNotification.createNotification(getApplicationContext(), mNowPlaying.currentBook, R.drawable.ic_simple_pause_button_white_foreground, 0);
         }
 	}
@@ -123,31 +125,38 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	}
 
 	private synchronized void playFetched(final String path, final boolean beginPlaying) {
-		state = PLAYING;
-		mMediaPlayer.stop();
-		mMediaPlayer.reset();
+//		state = PLAYING;
+//		mMediaPlayer.stop();
+//		mMediaPlayer.reset();
 		try {
+			Log.d(TAG, "playFetched: Path: " + path);
 			mMediaPlayer.setDataSource(path);
+			Log.d(TAG, "playFetched: Path: " + path);
 
 			mMediaPlayer.setOnPreparedListener(new OnPreparedListener() {
 
 				@Override
 				public void onPrepared(MediaPlayer mp) {
-					db = new localStorageDatabase(getApplicationContext());
-					Log.d(TAG, "onPrepared: OnPrepared");
-					int totalTime = mp.getDuration();
+					try {
+						Log.d(TAG, "onPrepared: OnPrepared");
+						int totalTime = mp.getDuration();
+						Log.d(TAG, "onPrepared: TotalTime: " + totalTime);
+						Log.d(TAG, "onPrepared: CuretTime: " + mNowPlaying.currentBook.getLocSecAsInt());
+						Log.d(TAG, "onPrepared: Title: " + mNowPlaying.currentBook.getTitle());
 
-					NotificationConfig();
-
-					positionBar.setMax(totalTime);
-					positionBar.setProgress((int) mNowPlaying.currentBook.getLocSecAsLong());
-					setSeekBarTracker();
-					mp.seekTo((int) mNowPlaying.currentBook.getLocSecAsLong()*1000);
-					play();
-					if (!beginPlaying) changeState();
+						NotificationConfig();
+						positionBar.setMax(totalTime);
+						positionBar.setProgress(mNowPlaying.currentBook.getLocSecAsInt());
+						setSeekBarTracker();
+						mp.seekTo(mNowPlaying.currentBook.getLocSecAsInt() * 1000);
+						play();
+						if (!beginPlaying) changeState();
+					} catch (Exception e){
+						Log.d(TAG, "onPrepared: " + e.getMessage());
+						e.printStackTrace();
+					}
 				}
 			});
-
 			mMediaPlayer.prepare();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -180,49 +189,26 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 		passingTime = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while (mMediaPlayer != null){
+				while (mMediaPlayer != null) {
 					try {
-						if (mMediaPlayer.getCurrentPosition() > mMediaPlayer.getDuration()){
+						if (mMediaPlayer.getCurrentPosition() > mMediaPlayer.getDuration()) {
 							// TODO move to next file/ end
 						}
-						if (Math.abs((mMediaPlayer.getCurrentPosition()/1000)-Integer.valueOf(mNowPlaying.currentBook.getLocSec()))>30){
-							mNowPlaying.currentBook.setLocSec(String.valueOf(mMediaPlayer.getCurrentPosition()/1000));
-							db.updateCurLoc(mNowPlaying.currentBook);
+						if (Math.abs((mMediaPlayer.getCurrentPosition() / 1000) - Integer.valueOf(mNowPlaying.currentBook.getLocSec())) > 30) {
+							mNowPlaying.currentBook.setLocSec(String.valueOf(mMediaPlayer.getCurrentPosition() / 1000));
+							repository.setCurrentLocation(mNowPlaying.currentBook);
 						}
 						Message msg = new Message();
 						msg.what = mMediaPlayer.getCurrentPosition();
 						handler.sendMessage(msg);
 						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
+					} catch (InterruptedException e) {
+					}
 				}
 
 			}
 		});
 		passingTime.start();
-
-//		seekBarChanger = new AsyncTask<Void, Void, Void>() {
-//
-//			@Override
-//			protected Void doInBackground(Void... params) {
-//				while (mMediaPlayer != null && mMediaPlayer.getCurrentPosition() < mMediaPlayer.getDuration()){
-//            		if (state == PLAYING){
-//            			int currentPosition = mMediaPlayer.getCurrentPosition();
-//            			positionBar.setProgress(currentPosition);
-////            			elapsedTimeLabel.setText(createTimeLabel(mMediaPlayer.getCurrentPosition()));
-////						remainingTimeLabel.setText(createTimeLabel(mMediaPlayer.getDuration()-mMediaPlayer.getCurrentPosition()));
-//
-//						Log.d(TAG, "doInBackground: POS: " + mMediaPlayer.getCurrentPosition());
-//
-////            			mAudioPlayerServiceBinder.setElapsedTime(mMediaPlayer.getCurrentPosition());
-////            			mAudioPlayerServiceBinder.setRemainingTime(mMediaPlayer.getDuration()-mMediaPlayer.getCurrentPosition());
-//            		}
-//
-//            		try { Thread.sleep(100); } catch (InterruptedException e) {}
-//            	}
-//				return null;
-//			}
-//		};
-//		seekBarChanger.execute();
 	}
 
 	public void pause() {
@@ -232,11 +218,14 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	}
 
 	public int changeState() {
+		Log.d("AudioSystems", "changeState: State: " + state);
 		switch(state){
-		case PLAYING:
-			pause(); break;
-		case PAUSED:
-			play(); break;
+			case PLAYING:
+				pause();
+				break;
+			case PAUSED:
+				play();
+				break;
 		}
 
 		return state;									// return the value of the changed state as confirmation

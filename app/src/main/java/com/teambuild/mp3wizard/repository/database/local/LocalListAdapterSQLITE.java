@@ -1,44 +1,34 @@
-package com.teambuild.mp3wizard.ui.home;
+package com.teambuild.mp3wizard.repository.database.local;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.PlayerActivity;
 import com.teambuild.mp3wizard.R;
-import com.teambuild.mp3wizard.ui.localStorageDatabase;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import static android.content.Context.LAYOUT_INFLATER_SERVICE;
 import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
-public class DownloadBookAdapter extends ArrayAdapter<Book> {
+public class LocalListAdapterSQLITE extends ArrayAdapter<Book> {
 
     ArrayList<Book> lista;
 
-    public DownloadBookAdapter(Context context, ArrayList<Book> books){
+    public LocalListAdapterSQLITE(Context context, ArrayList<Book> books){
         super(context, 0, books);
         lista = books;
     }
@@ -64,10 +54,10 @@ public class DownloadBookAdapter extends ArrayAdapter<Book> {
         Log.d("ListView", "getView: CurrentFile: " + book.getCurrentFile());
         Log.d("ListView", "getView: Hour: " + book.getFileNumAsInt());
 
-        long totalSec = book.getLocSecAsLong();
-        int hour = (int)(totalSec/3600);
-        int min = (int)((totalSec-(3600*hour))/60);
-        int sec = (int)(totalSec-((3600*hour)+(60*min)));
+        int totalSec = book.getLocSecAsInt();
+        int hour = (totalSec/3600);
+        int min = ((totalSec-(3600*hour))/60);
+        int sec = (totalSec-((3600*hour)+(60*min)));
         String minS = String.valueOf(min);
         String secS = String.valueOf(sec);
         if (min < 10) minS = "0" + minS;
@@ -148,13 +138,13 @@ public class DownloadBookAdapter extends ArrayAdapter<Book> {
         removeBookBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                localStorageDatabase db = new localStorageDatabase(getApplicationContext());
+                LocalSQLiteDatabase db = new LocalSQLiteDatabase();
                 for (int x = 1; x <= book.getFileNumAsInt(); x++) {
                     new File(getApplicationContext().getFilesDir() + File.separator + book.getTitle(), String.format("%d.mp3", x)).delete();
                 }
                 db.removeBook(book);
                 lista.remove(position);
-                DownloadBookAdapter.this.notifyDataSetChanged();
+                LocalListAdapterSQLITE.this.notifyDataSetChanged();
                 Log.d("Remove", "onClick: ");
             }
         });

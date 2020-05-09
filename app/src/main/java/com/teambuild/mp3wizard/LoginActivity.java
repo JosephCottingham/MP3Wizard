@@ -16,8 +16,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.teambuild.mp3wizard.ui.MainActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
     private EditText email, password;
     private Button login;
     private TextView signupSwitch;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
 
         // get the current firebase instance
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -46,12 +47,12 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 // if we have a user we signin else we do not and prompt user
                 if(mFirebaseUser != null){
-                    Toast.makeText(MainActivity.this,"You are logged in",Toast.LENGTH_SHORT).show();
-                    Intent i = new Intent(MainActivity.this, HomeActivity.class);
+                    Toast.makeText(LoginActivity.this,"You are logged in",Toast.LENGTH_SHORT).show();
+                    Intent i = new Intent(LoginActivity.this, MainActivity.class);
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(i);
                 } else {
-                    Toast.makeText(MainActivity.this,"Please Login",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this,"Please Login",Toast.LENGTH_SHORT).show();
                 }
             }
         };
@@ -72,13 +73,13 @@ public class MainActivity extends AppCompatActivity {
                     password.requestFocus();
                 } else if (!(emailTxt.isEmpty() && passwordTxt.isEmpty())){
                     // signs in and waits for auth, if error user is notified otherwise home act is started
-                    mFirebaseAuth.signInWithEmailAndPassword(emailTxt, passwordTxt).addOnCompleteListener(MainActivity.this, new OnCompleteListener<AuthResult>() {
+                    mFirebaseAuth.signInWithEmailAndPassword(emailTxt, passwordTxt).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if(!task.isSuccessful()){
-                                Toast.makeText(MainActivity.this, "Login Error, please try again", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(LoginActivity.this, "Login Error, please try again", Toast.LENGTH_SHORT).show();
                             } else {
-                                Intent intToHome = new Intent(MainActivity.this,HomeActivity.class);
+                                Intent intToHome = new Intent(LoginActivity.this, MainActivity.class);
                                 intToHome.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intToHome);
                             }
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     // check any potental errors becasue data doesnt follow our conventions
-                    Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Error", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v){
                 // switch to signup act
-                Intent intSignUp = new Intent(MainActivity.this,SignupActivity.class);
+                Intent intSignUp = new Intent(LoginActivity.this,SignupActivity.class);
                 startActivity(intSignUp);
             }
         });

@@ -1,16 +1,16 @@
-package com.teambuild.mp3wizard.ui.home;
+package com.teambuild.mp3wizard.ui.cloudlist;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class HomeViewModel extends ViewModel {
+public class CloudlistViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public HomeViewModel() {
+    public CloudlistViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("Local Books");
+        mText.setValue("Cloud Books");
     }
 
     public LiveData<String> getText() {

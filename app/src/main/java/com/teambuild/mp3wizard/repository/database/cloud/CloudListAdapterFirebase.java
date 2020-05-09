@@ -1,17 +1,10 @@
-package com.teambuild.mp3wizard.ui.dashboard;
+package com.teambuild.mp3wizard.repository.database.cloud;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.DownloadManager;
-import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,7 +12,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
 
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
@@ -33,15 +25,9 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.R;
-import com.teambuild.mp3wizard.ui.home.DownloadBookAdapter;
-import com.teambuild.mp3wizard.ui.localStorageDatabase;
+import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 import java.io.File;
-import java.net.URI;
-import java.util.EventListener;
-import java.util.Locale;
-
-import io.opencensus.internal.Utils;
 
 import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
@@ -52,7 +38,7 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
     private StorageReference audioRef;
     private StorageReference iconRef;
     private StorageReference storageReference;
-    private localStorageDatabase db;
+    private LocalSQLiteDatabase db;
 
     public CloudListAdapterFirebase(FirebaseListOptions options){
         super(options);
@@ -74,10 +60,10 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
 
         bookTitle.setText(book.getTitle().toString());
         bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
-        long totalSec = book.getLocSecAsLong();
-        int hour = (int)(totalSec/3600);
-        int min = (int)((totalSec-(3600*hour))/60);
-        int sec = (int)(totalSec-((3600*hour)+(60*min)));
+        int totalSec = book.getLocSecAsInt();
+        int hour = (totalSec/3600);
+        int min = ((totalSec-(3600*hour))/60);
+        int sec = (totalSec-((3600*hour)+(60*min)));
         String minS = String.valueOf(min);
         String secS = String.valueOf(sec);
         if (min < 10) minS = "0" + minS;
@@ -87,7 +73,7 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
         Log.d("Hello", "populateView setDownloaded: " + book.getDownloaded());
         bookDownload.setText(book.getDownloaded());
         boolean downloadBtnDisabled = false;
-        db = new localStorageDatabase(getApplicationContext());
+        db = new LocalSQLiteDatabase();
         for (String title : db.getBookTitles()){
             if (title == book.getTitle().toString()){
                 downloadBtnDisabled = true;
@@ -202,38 +188,8 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
         }
         request.setDestinationInExternalFilesDir(context, (Environment.DIRECTORY_AUDIOBOOKS + File.separator + book.getTitle()), String.format("%d.mp3", fileNum));
         request.setMimeType("audio/mp3");
-//        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-//        BroadcastReceiver receiver = new DownloadReceiver();
-//        context.registerReceiver(receiver, filter);
-//
-//        long fileID=0;
-//        try {
-//            fileID = downloadManager.enqueue(request);
-//            Log.d("Download", String.format(Locale.US, "networkHttpDownload download of %s with id %d", url, fileID));
-//            if (!Utils.waitUntil(() -> mIsDownloadComplete, 30)) {
-//
-//            }
-//        }
-
-
-//        boolean mIsDownloadComplete = false;
         long fileID = downloadManager.enqueue(request);
-//        Uri resp;
-//        do {
-//            resp = downloadManager.getUriForDownloadedFile(fileID);
-//        } while (resp==null);
 
-        Log.d("Download", "downloadfile: Path: " + Environment.DIRECTORY_AUDIOBOOKS);
-        Log.d("Download", "downloadfile: FileID: " + fileID);
-        Log.d("Download", "downloadfile: Downloaded");
-//        ContentValues contentValues = new ContentValues();
-//        contentValues.put(MediaStore.Audio.AudioColumns.RELATIVE_PATH, (Environment.DIRECTORY_AUDIOBOOKS + File.separator + book.getTitle() + File.separator + String.format("%d.mp3", fileNum)));
-//        contentValues.put(MediaStore.Audio.AudioColumns.TITLE, book.getTitle() + " Num:" + fileNum);
-//        contentValues.put(MediaStore.Audio.AudioColumns.ALBUM, book.getTitle());
-//        contentValues.put(MediaStore.Audio.AudioColumns.IS_AUDIOBOOK, 1);
-
-//        Uri internalUri = context.getContentResolver().insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues);
-//        Log.d("Download", internalUri.toString());
     }
 
 }

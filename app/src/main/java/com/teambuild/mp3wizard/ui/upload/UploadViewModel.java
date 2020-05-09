@@ -1,14 +1,14 @@
-package com.teambuild.mp3wizard.ui.notifications;
+package com.teambuild.mp3wizard.ui.upload;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class NotificationsViewModel extends ViewModel {
+public class UploadViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public NotificationsViewModel() {
+    public UploadViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is notifications fragment");
     }

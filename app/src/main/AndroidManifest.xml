@@ -13,10 +13,10 @@
         <activity android:name=".PlayerActivity"></activity>
         <service android:name="com.teambuild.mp3wizard.audioplayer.AudioPlayerService" android:enabled="true"></service>
         <activity
-            android:name=".HomeActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/title_activity_home" />
         <activity android:name=".SignupActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

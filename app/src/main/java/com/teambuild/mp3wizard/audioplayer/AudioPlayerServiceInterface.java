@@ -10,4 +10,5 @@ public interface AudioPlayerServiceInterface {
 	public void play();
 	public void play(int position);
 	public void pause();
+	public Book getCurrentQueuedBook();
 }

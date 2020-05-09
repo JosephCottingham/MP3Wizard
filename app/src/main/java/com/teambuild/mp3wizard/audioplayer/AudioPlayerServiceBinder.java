@@ -11,7 +11,6 @@ public class AudioPlayerServiceBinder extends Binder{
 	public AudioPlayerServiceBinder(AudioPlayerService musicPlayerService, Context application) {
 		mMusicPlayerService = musicPlayerService;
 		mApplication = application;
-		mApplication = application;
 	}
 	
 	public AudioPlayerService getService() {
