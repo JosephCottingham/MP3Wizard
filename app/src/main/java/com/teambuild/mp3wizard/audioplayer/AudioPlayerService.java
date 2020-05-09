@@ -171,7 +171,7 @@ public class AudioPlayerService extends Service implements AudioPlayerServiceInt
 	}
 
 
-	public String createTimeLabel(int totalSec) {
+	private String createTimeLabel(int totalSec) {
 		int hour = (int)(totalSec/3600);
 		int min = (int)((totalSec-(3600*hour))/60);
 		int sec = (int)(totalSec-((3600*hour)+(60*min)));

@@ -1,9 +1,12 @@
 package com.teambuild.mp3wizard.repository.database.cloud;
 
+import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
@@ -24,7 +27,9 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.teambuild.mp3wizard.Book;
+import com.teambuild.mp3wizard.PlayerActivity;
 import com.teambuild.mp3wizard.R;
+import com.teambuild.mp3wizard.repository.RepositorySingleton;
 import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 import java.io.File;
@@ -32,165 +37,81 @@ import java.io.File;
 import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class CloudListAdapterFirebase extends FirebaseListAdapter {
-    private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
-    private FirebaseStorage firebaseStorage;
     private StorageReference audioRef;
     private StorageReference iconRef;
     private StorageReference storageReference;
-    private LocalSQLiteDatabase db;
+    private RepositorySingleton repository;
 
     public CloudListAdapterFirebase(FirebaseListOptions options){
         super(options);
     }
     @Override
     protected void populateView(View v, Object model, int position){
+        repository = RepositorySingleton.getInstance();
 
-        mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        final String userId = mFirebaseUser.getUid();
+        // Cast model to book, model is the current postion in the lists book
+        final Book book = (Book) model;
 
+        // Ref views, and set reference values
         TextView bookTitle = v.findViewById(R.id.bookTitle);
         TextView bookFile = v.findViewById(R.id.bookFile);
         TextView bookTime = v.findViewById(R.id.bookTime);
         TextView bookDownload = v.findViewById(R.id.bookDownloaded);
-        Button bookBtn = v.findViewById(R.id.bookDownloadBtn);
+        Button bookDownloadBtn = v.findViewById(R.id.bookDownloadBtn);
 
-        final Book book = (Book) model;
-
-        bookTitle.setText(book.getTitle().toString());
+        // populate views with values for current book
+        bookTitle.setText(book.getTitle());
         bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
-        int totalSec = book.getLocSecAsInt();
-        int hour = (totalSec/3600);
-        int min = ((totalSec-(3600*hour))/60);
-        int sec = (totalSec-((3600*hour)+(60*min)));
+        bookTime.setText(createTimeLabel(book.getLocSecAsInt()));
+
+        // checks if book is logged in SQLITE database (It is logged after download so all content is fully aviable if found)
+        // sets button to play or download based on that
+        final Boolean downloaded=repository.isDownloaded(book.getTitle());
+        if (downloaded){
+            bookDownload.setText("Downloaded");
+            bookDownloadBtn.setText("Play");
+        } else {
+            bookDownload.setText("Cloud");
+            bookDownloadBtn.setText("Download");
+        }
+
+        // Set Listener and configure listener to work adaptivly with the state of download
+        bookDownloadBtn.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("RestrictedApi")
+            @Override
+            public void onClick(View v) {
+                if (downloaded){
+                    // gets local version of book, which will have the unique SQLITE book ID required by player to setup book
+                    Book localBookVersion = repository.getLocalBookByTitle(book.getTitle());
+
+                    Intent playerIntent = new Intent(getApplicationContext(), PlayerActivity.class);
+
+                    // package the BookId into a bundle and hand it off to the intent before implementing the intent
+                    Bundle b = new Bundle();
+                    b.putString("bookID", book.getID());
+                    playerIntent.putExtras(b);
+                    getApplicationContext().startActivity(playerIntent);
+                } else {
+                    // if it is not already downloaded, then it can be via this meathod call
+                    repository.DownloadAndConfigBook(book);
+                }
+            }
+        });
+
+    }
+
+
+    private String createTimeLabel(int totalSec) {
+        int hour = (int)(totalSec/3600);
+        int min = (int)((totalSec-(3600*hour))/60);
+        int sec = (int)(totalSec-((3600*hour)+(60*min)));
         String minS = String.valueOf(min);
         String secS = String.valueOf(sec);
         if (min < 10) minS = "0" + minS;
-        if (sec < 10) secS += "0" + secS;
-        String time = String.format("%s:%s:%s", hour, minS, secS);
-        bookTime.setText(time);
-        Log.d("Hello", "populateView setDownloaded: " + book.getDownloaded());
-        bookDownload.setText(book.getDownloaded());
-        boolean downloadBtnDisabled = false;
-        db = new LocalSQLiteDatabase();
-        for (String title : db.getBookTitles()){
-            if (title == book.getTitle().toString()){
-                downloadBtnDisabled = true;
-                bookDownload.setText("Downloaded");
-                break;
-            }
-            bookDownload.setText("Cloud");
-        }
-        if (downloadBtnDisabled){
-            bookBtn.setEnabled(false);
-        } else {
-            bookBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d("TEST", "onClick: File cur Num: " + book.getCurrentFileAsInt());
-                    Log.d("TEST", "onClick: File Num: " + book.getFileNumAsInt());
-//                    File f = new File("/data/user/0/com.teambuild.mp3wizard/files/The Art of Invisibility Kevin Mitnick", "0.mp3");
-//                    Boolean temp = f.delete();
-                    DownloadRefSetup(book, userId);
-                }
-            });
-        }
+        if (sec < 10) secS = "0" + secS;
+        return String.format("%s:%s:%s", hour, minS, secS);
     }
 
-    private boolean DownloadRefSetup(final Book book, final String userId){
-        final String TAG = "Download";
-        Log.d("Download", "DownloadRefSetup: " + book.getFileNum() + " " + book.getTitle() + " " + book.getLocSec());
-        for(int fileNum = 1; fileNum <= Integer.parseInt(book.getFileNum()); fileNum++) {
-            storageReference = firebaseStorage.getInstance().getReference("users" + File.separator + userId + File.separator + book.getTitle());
-            audioRef = storageReference.child(String.format("%d.mp3", fileNum));
-            iconRef = storageReference.child("icon.png");
-            Log.d("Download", "DownloadRefSetup: " + audioRef.getPath());
-
-            File rootPath = new File(getApplicationContext().getFilesDir() + File.separator + book.getTitle());
-            if (!rootPath.exists()){
-                rootPath.mkdirs();
-            }
-
-            Log.d(TAG, "DownloadRefSetup: File Created");
-            final File localAudioFile = new File(rootPath, String.format("%d.mp3", fileNum));
-            final File localIconFile = new File(rootPath, "icon.png");
-            Log.d(TAG, "DownloadRefSetup: final path abs : " + localAudioFile.getAbsolutePath());
-            Log.d(TAG, "DownloadRefSetup: Final path: " + localAudioFile.toString());
-            Log.d(TAG, "DownloadRefSetup: root path: " + rootPath.toString());
-            Log.d(TAG, "DownloadRefSetup: REF Path: " + audioRef.getPath());
-            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getBucket());
-            Log.d(TAG, "DownloadRefSetup: REF Bucket: " + audioRef.getDownloadUrl().toString());
-
-
-            audioRef.getFile(localAudioFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Log.d(TAG, "onProgress: getBytesTransferred: " + taskSnapshot.getBytesTransferred());
-                    Log.d(TAG, "onProgress: getTotalByteCount: " + taskSnapshot.getTotalByteCount());
-
-                    double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
-                    Log.d(TAG, "onProgress: Current Status: " + progress);
-                }
-            }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    Log.d(TAG, "onSuccess: Downloaded");
-                    Log.d(TAG, "onSuccess: " + localAudioFile.toString());
-                    iconRef.getFile(localIconFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
-                            Log.d(TAG, "onProgress: getBytesTransferred: " + taskSnapshot.getBytesTransferred());
-                            Log.d(TAG, "onProgress: getTotalByteCount: " + taskSnapshot.getTotalByteCount());
-
-                            double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
-                            Log.d(TAG, "onProgress: Current Status: " + progress);
-                        }
-                    }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                            Log.d(TAG, "onSuccess: Downloaded");
-                            Log.d(TAG, "onSuccess: " + localIconFile.toString());
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "onFailure: " + ";local tem file not created  created " + e.toString());
-                        }
-                    });
-                    db.addBook(book);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Log.d(TAG, "onFailure: " + ";local tem file not created  created " + e.toString());
-                }
-            });
-        }
-        return true;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.Q)
-    private void downloadfile(Context context, String url, Book book, int fileNum){
-
-        DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        Uri uri = Uri.parse(url);
-
-        DownloadManager.Request request = new DownloadManager.Request(uri);
-        request.setTitle("Test");
-        request.allowScanningByMediaScanner();
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        Log.d("Download", "downloadfile: Path: " + (Environment.DIRECTORY_AUDIOBOOKS + File.separator + book.getTitle()));
-
-        File rootPath = new File(Environment.DIRECTORY_AUDIOBOOKS + File.separator + book.getTitle(), String.format("%d.mp3", fileNum));
-        if (!rootPath.exists()){
-            rootPath.mkdirs();
-        }
-        request.setDestinationInExternalFilesDir(context, (Environment.DIRECTORY_AUDIOBOOKS + File.separator + book.getTitle()), String.format("%d.mp3", fileNum));
-        request.setMimeType("audio/mp3");
-        long fileID = downloadManager.enqueue(request);
-
-    }
 
 }
 

@@ -28,7 +28,6 @@ import java.util.Map;
 public class CloudFirebaseDatabase {
 
     private FirebaseAuth mFirebaseAuth;
-    private FirebaseUser mFirebaseUser;
 
     private ArrayList<Map<String, Object>> firebaseData;
 
@@ -40,7 +39,7 @@ public class CloudFirebaseDatabase {
 
     public CloudListAdapterFirebase getFirebaseListAdapter(LifecycleOwner owner) {
 
-        Query query = com.google.firebase.database.FirebaseDatabase.getInstance().getReference().child(mFirebaseUser.getUid());
+        Query query = com.google.firebase.database.FirebaseDatabase.getInstance().getReference().child(getFirebaseUserID());
         FirebaseListOptions<Book> options = new FirebaseListOptions.Builder<Book>()
                 .setLayout(R.layout.book_info)
                 .setLifecycleOwner(owner)
@@ -52,7 +51,6 @@ public class CloudFirebaseDatabase {
 
     private void configFirebaseAuth(){
         if (mFirebaseAuth==null) mFirebaseAuth = FirebaseAuth.getInstance();
-        if (mFirebaseUser==null) mFirebaseUser = mFirebaseAuth.getCurrentUser();
     }
 
     private void setBookLocationListeners(){
@@ -134,6 +132,10 @@ public class CloudFirebaseDatabase {
     }
 
     public void updateCurLoc(Book book){
-        FirebaseDatabase.getInstance().getReference().child(mFirebaseAuth.getCurrentUser().getUid()).child(book.getTitle()).child("locSec").setValue(book.getLocSec());
+        FirebaseDatabase.getInstance().getReference().child(getFirebaseUserID()).child(book.getTitle()).child("locSec").setValue(book.getLocSec());
+    }
+
+    public String getFirebaseUserID(){
+        return mFirebaseAuth.getCurrentUser().getUid();
     }
 }

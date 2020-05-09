@@ -2,8 +2,10 @@ package com.teambuild.mp3wizard.repository.database.local;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,6 +16,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.PlayerActivity;
@@ -47,7 +51,7 @@ public class LocalListAdapterSQLITE extends ArrayAdapter<Book> {
         TextView bookFile = (TextView) convertView.findViewById(R.id.bookFile);
         TextView bookTime = (TextView) convertView.findViewById(R.id.bookTime);
         TextView bookDownloaded = (TextView) convertView.findViewById(R.id.bookDownloaded);
-        Button removeBookBtn = (Button) convertView.findViewById(R.id.bookRemoveBtn);
+        final Button removeBookBtn = (Button) convertView.findViewById(R.id.bookRemoveBtn);
         // Populate the data into the template view using the data object
         bookTitle.setText(book.getTitle());
         bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
@@ -138,14 +142,31 @@ public class LocalListAdapterSQLITE extends ArrayAdapter<Book> {
         removeBookBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                LocalSQLiteDatabase db = new LocalSQLiteDatabase();
-                for (int x = 1; x <= book.getFileNumAsInt(); x++) {
-                    new File(getApplicationContext().getFilesDir() + File.separator + book.getTitle(), String.format("%d.mp3", x)).delete();
-                }
-                db.removeBook(book);
-                lista.remove(position);
-                LocalListAdapterSQLITE.this.notifyDataSetChanged();
-                Log.d("Remove", "onClick: ");
+                removeBookBtn.setClickable(false);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setCancelable(false);
+                builder.setTitle("Removing Content");
+                builder.setMessage("You are about to delete content from your device, All Content from \"" + book.getTitle() + "\" will be removed");
+                builder.setPositiveButton("Confirm",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                LocalSQLiteDatabase db = new LocalSQLiteDatabase();
+                                db.removeBook(book);
+                                lista.remove(position);
+                                LocalListAdapterSQLITE.this.notifyDataSetChanged();
+                                Log.d("Remove", "onClick: ");
+                            }
+                        });
+                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        removeBookBtn.setClickable(true);
+                    }
+                });
+
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
 

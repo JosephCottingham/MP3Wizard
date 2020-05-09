@@ -209,12 +209,28 @@ public class LocalSQLiteDatabase extends SQLiteOpenHelper {
     }
 
     public void removeBook(Book book){
+        // Remove from SQLITE Database
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         sqLiteDatabase.delete(TABLE_NAME,"ID = ?", new String[] {book.getID()});
+
+        // Remove Audio/Icon Files from Storage
+        for (int fileNum = 1; fileNum <= book.getFileNumAsInt(); fileNum++) {
+            File localAudioFile = new File(book.getPath(), String.format("%d.mp3", fileNum));
+            localAudioFile.delete();
+        }
+        File localIconFile = new File(book.getPath(), "icon.png");
+        localIconFile.delete();
     }
 
     public LocalListAdapterSQLITE getLocalListAdapterSQLITE(Context context) {
         return new LocalListAdapterSQLITE(context, getAllDownloadData());
+    }
+
+    public Book getBookWithTitle(String title){
+        ArrayList<Book> books = getAllDownloadData();
+        for (Book book : books)
+            if (book.getTitle().equals(title)) return book;
+        return null;
     }
 
 }

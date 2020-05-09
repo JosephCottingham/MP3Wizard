@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+
 public class LocallistViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
@@ -12,6 +13,7 @@ public class LocallistViewModel extends ViewModel {
         mText = new MutableLiveData<>();
         mText.setValue("Local Books");
     }
+
 
     public LiveData<String> getText() {
         return mText;

@@ -31,6 +31,8 @@ import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class LocallistFragment extends Fragment {
 
+    // displays downloaded content and permits interaction
+
     private LocallistViewModel locallistViewModel;
     private ListView listView;
 
@@ -38,11 +40,12 @@ public class LocallistFragment extends Fragment {
         locallistViewModel = ViewModelProviders.of(this).get(LocallistViewModel.class);
         View root = inflater.inflate(R.layout.fragment_locallist, container, false);
 
+        // sets the listview with media
         listView = root.findViewById(R.id.downloadListView);
         listView.setAdapter(RepositorySingleton.getInstance().getLocalListAdapterSQLITE(getContext()));
 
-        final TextView textView = root.findViewById(R.id.text_home);
-
+        // configs header
+        final TextView textView = root.findViewById(R.id.text_local);
         locallistViewModel.getText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -52,10 +55,4 @@ public class LocallistFragment extends Fragment {
 
         return root;
     }
-
-
-    private  boolean removeFile(Book book, String userId){
-        return true;
-    }
-
 }

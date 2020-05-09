@@ -1,33 +1,20 @@
 package com.teambuild.mp3wizard.ui;
 
 import android.os.Bundle;
-import android.widget.Button;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.tabs.TabLayout;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-import androidx.viewpager.widget.ViewPager;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.storage.StorageReference;
-
-
-import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.R;
 import com.teambuild.mp3wizard.audioplayer.AudioServiceConnectionSingleton;
 import com.teambuild.mp3wizard.repository.RepositorySingleton;
 
-import java.util.ArrayList;
-
+// Manages the navigation between fragments
 
 public class MainActivity extends AppCompatActivity {
 

@@ -1,5 +1,6 @@
 package com.teambuild.mp3wizard;
 
+// Main type for storing data related to media content in this application
 
 public class Book {
     private String title;
