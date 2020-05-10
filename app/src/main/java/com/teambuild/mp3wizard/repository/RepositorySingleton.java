@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -37,13 +38,16 @@ import com.teambuild.mp3wizard.repository.database.local.LocalListAdapterSQLITE;
 import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class RepositorySingleton {
     private static RepositorySingleton inst;
 
-
+    private Map<String, ProgressBar> progress;
     private LocalSQLiteDatabase localSQLiteDatabase;
     private CloudFirebaseDatabase cloudFirebaseDatabase;
 
@@ -61,6 +65,7 @@ public class RepositorySingleton {
     private RepositorySingleton(){
         localSQLiteDatabase = new LocalSQLiteDatabase();
         cloudFirebaseDatabase = new CloudFirebaseDatabase();
+        progress = new HashMap<String, ProgressBar>();
     }
 
     public LocalListAdapterSQLITE getLocalListAdapterSQLITE(Context context){
@@ -123,6 +128,8 @@ public class RepositorySingleton {
     }
 
     public boolean DownloadAndConfigBook(final Book book){
+        localSQLiteDatabase.addDownloadingItem(book.getTitle());
+
         // All books only have one icon file and therefore do not need to be rerefrenced
         final StorageReference iconRef = FirebaseStorage.getInstance().getReference("users" + File.separator + getFirebaseUserID() + File.separator + book.getTitle()).child("icon.png");
         @SuppressLint("RestrictedApi") final File rootPath = new File(getApplicationContext().getFilesDir() + File.separator + book.getTitle());
@@ -141,8 +148,8 @@ public class RepositorySingleton {
             audioRef.getFile(localAudioFile).addOnProgressListener(new OnProgressListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
                 public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
-
-                    double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
+                    progress.get(book.getTitle()).setProgress((int) ((int) 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount())));
+                    Log.d("Download", "onProgress: " + 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount()));
                 }
             }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                 @Override
@@ -151,7 +158,8 @@ public class RepositorySingleton {
                         @Override
                         public void onProgress(@NonNull FileDownloadTask.TaskSnapshot taskSnapshot) {
 
-                            double progress = 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount());
+                            progress.get(book.getTitle()).setProgress((int) ((int) 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount())));
+                            Log.d("Download", "onProgress: " + 100.0 * ((double) taskSnapshot.getBytesTransferred() / (double)taskSnapshot.getTotalByteCount()));
                         }
                     }).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                         @Override
@@ -164,6 +172,7 @@ public class RepositorySingleton {
                     });
                     // add book to database after all downing is complete
                     localSQLiteDatabase.addBook(book);
+                    localSQLiteDatabase.removeDownloadingItem(book.getTitle());
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -172,5 +181,18 @@ public class RepositorySingleton {
             });
         }
         return true;
+    }
+
+
+    public boolean isDownloading(String title){
+        ArrayList<String> bookTitles = localSQLiteDatabase.getDownloadingItems();
+        for (String bookTitle : bookTitles){
+            if (bookTitle.equals(title)) return true;
+        }
+        return false;
+    }
+
+    public void setProgressBar(String title, ProgressBar progressBar){
+        progress.put(title, progressBar);
     }
 }

@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -56,8 +57,9 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
         TextView bookTitle = v.findViewById(R.id.bookTitle);
         TextView bookFile = v.findViewById(R.id.bookFile);
         TextView bookTime = v.findViewById(R.id.bookTime);
-        TextView bookDownload = v.findViewById(R.id.bookDownloaded);
-        Button bookDownloadBtn = v.findViewById(R.id.bookDownloadBtn);
+        final TextView bookDownload = v.findViewById(R.id.bookDownloaded);
+        final ProgressBar progressBar = v.findViewById(R.id.bookDownloadProgressBar);
+        final Button bookDownloadBtn = v.findViewById(R.id.bookDownloadBtn);
 
         // populate views with values for current book
         bookTitle.setText(book.getTitle());
@@ -75,7 +77,14 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
             bookDownloadBtn.setText("Download");
         }
 
-        // Set Listener and configure listener to work adaptivly with the state of download
+        final Boolean downloading=repository.isDownloading(book.getTitle());
+        if (downloading){
+            bookDownload.setText("Downloading");
+            repository.setProgressBar(book.getTitle(), progressBar);
+            bookDownloadBtn.setVisibility(View.INVISIBLE);
+        }
+
+        // Set Listener and configure listener to work adaptively with the state of download
         bookDownloadBtn.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("RestrictedApi")
             @Override
@@ -88,12 +97,17 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
 
                     // package the BookId into a bundle and hand it off to the intent before implementing the intent
                     Bundle b = new Bundle();
-                    b.putString("bookID", book.getID());
+                    b.putString("bookID", localBookVersion.getID());
                     playerIntent.putExtras(b);
+                    playerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     getApplicationContext().startActivity(playerIntent);
                 } else {
-                    // if it is not already downloaded, then it can be via this meathod call
+                    // if it is not already downloaded, then it can be via this method call
+                    bookDownloadBtn.setVisibility(View.INVISIBLE);
+                    repository.setProgressBar(book.getTitle(), progressBar);
                     repository.DownloadAndConfigBook(book);
+//                    bookDownloadBtn.setVisibility(View.VISIBLE);
+
                 }
             }
         });
