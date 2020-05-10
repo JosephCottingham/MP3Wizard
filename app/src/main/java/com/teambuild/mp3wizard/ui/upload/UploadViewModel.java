@@ -1,19 +1,20 @@
-package com.teambuild.mp3wizard.ui.dashboard;
+package com.teambuild.mp3wizard.ui.upload;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class DashboardViewModel extends ViewModel {
+public class UploadViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public DashboardViewModel() {
+    public UploadViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("Cloud Books");
+        mText.setValue("This is notifications fragment");
     }
 
     public LiveData<String> getText() {
         return mText;
     }
 }
+

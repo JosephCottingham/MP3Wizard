@@ -1,17 +1,6 @@
 package com.teambuild.mp3wizard;
 
-import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
-
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.FirebaseStorage;
-
-import java.io.File;
+// Main type for storing data related to media content in this application
 
 public class Book {
     private String title;
@@ -21,6 +10,7 @@ public class Book {
     private String downloaded;
     private String ID;
     private String path;
+    private String duration;
 
     public Book(){
     }
@@ -57,13 +47,14 @@ public class Book {
         return locSec;
     }
 
-    public long getLocSecAsLong(){
-        return Long.parseLong(locSec);
+    public int getLocSecAsInt(){
+        return Integer.parseInt(locSec);
     }
 
     public String getDownloaded(){
         return downloaded;
     }
+
     public void setCurrentFile(String currentFile) {
         this.currentFile = currentFile;
     }
@@ -95,4 +86,5 @@ public class Book {
     public void setPath(String path){
         this.path = path;
     }
+
 }

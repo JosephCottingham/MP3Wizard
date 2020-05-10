@@ -39,11 +39,11 @@ public class CreateNotification {
             PendingIntent pendingIntentPlay = PendingIntent.getBroadcast(context, 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-
+    // TODO setup author....
             notification = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_sound_on_foreground)
                     .setContentTitle(book.getTitle())
-                    .setContentText("Kevin Mitnick")
+                    .setContentText("Author")
                     .setLargeIcon(icon)
                     .setOnlyAlertOnce(true)
                     .setShowWhen(false)
@@ -51,7 +51,7 @@ public class CreateNotification {
                     .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0)
                         .setMediaSession(mediaSessionCompat.getSessionToken()))
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
                     .build();
 
             notificationManagerCompat.notify(1, notification);

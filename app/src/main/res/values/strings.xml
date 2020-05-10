@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">MP3Wizard</string>
     <string name="title_activity_home">HomeActivity</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_locallist">Local Books</string>
+    <string name="title_cloudlist">Cloud Books</string>
+    <string name="title_upload">Upload Books</string>
     <string name="title_settings">Settings</string>
 
 </resources>
