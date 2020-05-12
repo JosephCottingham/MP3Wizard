@@ -11,10 +11,10 @@
         android:icon="@android:drawable/stat_sys_download_done"
         android:title="@string/title_cloudlist" />
 
-    <item
-        android:id="@+id/navigation_upload"
-        android:icon="@android:drawable/stat_sys_upload_done"
-        android:title="@string/title_upload" />
+<!--    <item-->
+<!--        android:id="@+id/navigation_upload"-->
+<!--        android:icon="@android:drawable/stat_sys_upload_done"-->
+<!--        android:title="@string/title_upload" />-->
 
     <item
         android:id="@+id/navigation_settings"
