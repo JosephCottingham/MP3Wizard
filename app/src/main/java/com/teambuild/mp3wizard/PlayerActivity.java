@@ -141,7 +141,7 @@ public class PlayerActivity extends AppCompatActivity {
         TextView cloTextView = pView.findViewById(R.id.CloudLocationTextView);
         locTextView.setText(String.format("Local Location: %s", createTimeLabel(repository.getSQLITELoc(bookID))));
         cloTextView.setText(String.format("Cloud Location:  %s", createTimeLabel(repository.getFirebaseLoc(bookID))));
-        locationPopupWindow.showAtLocation(getWindow().getDecorView().getRootView(), Gravity.CENTER, 0, 0);
+        locationPopupWindow.showAtLocation(getWindow().getDecorView(), Gravity.CENTER, 0, 0); // TODO Fix this problem
 
         localBtn.setOnClickListener(new View.OnClickListener() {
             @Override
