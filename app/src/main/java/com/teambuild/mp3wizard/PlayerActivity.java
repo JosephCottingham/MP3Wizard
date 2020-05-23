@@ -1,8 +1,10 @@
 package com.teambuild.mp3wizard;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,6 +26,7 @@ import android.widget.TextView;
 import com.teambuild.mp3wizard.audioplayer.AudioPlayerService;
 import com.teambuild.mp3wizard.audioplayer.AudioServiceConnectionSingleton;
 import com.teambuild.mp3wizard.repository.RepositorySingleton;
+import com.teambuild.mp3wizard.repository.database.local.LocalListAdapterSQLITE;
 import com.teambuild.mp3wizard.repository.database.local.LocalSQLiteDatabase;
 
 import java.io.File;
@@ -126,43 +129,34 @@ public class PlayerActivity extends AppCompatActivity {
         playBtn.setClickable(true);
     }
 
-    private void cloudVsLocalPopup(){
-        Log.d("AudioSystem", "cloudVsLocalPopup: Popupfasdfa");
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        final View locationPopupView = inflater.inflate(R.layout.location_popup_window, null);
-        int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-        int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-        boolean focusable = false; // lets taps outside the popup also dismiss it
-        final PopupWindow locationPopupWindow = new PopupWindow(locationPopupView, width, height, focusable);
-        View pView = locationPopupWindow.getContentView();
-        final Button localBtn = pView.findViewById(R.id.localBtn);
-        final Button cloudBtn = pView.findViewById(R.id.cloudBtn);
-        TextView locTextView = pView.findViewById(R.id.LocLocationTextView);
-        TextView cloTextView = pView.findViewById(R.id.CloudLocationTextView);
-        locTextView.setText(String.format("Local Location: %s", createTimeLabel(repository.getSQLITELoc(bookID))));
-        cloTextView.setText(String.format("Cloud Location:  %s", createTimeLabel(repository.getFirebaseLoc(bookID))));
-        locationPopupWindow.showAtLocation(getWindow().getDecorView(), Gravity.CENTER, 0, 0); // TODO Fix this problem
 
-        localBtn.setOnClickListener(new View.OnClickListener() {
+    private void cloudVsLocalPopup(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getWindow().getDecorView().getContext());
+        builder.setCancelable(false);
+        builder.setTitle("Removing Content");
+        builder.setMessage("Cloud and local locations do not match\n" + String.format("Local Location: %s", createTimeLabel(repository.getSQLITELoc(bookID))) + "\n" + String.format("Cloud Location:  %s", createTimeLabel(repository.getFirebaseLoc(bookID))) + "\nWhich would you like to use?");
+        builder.setPositiveButton("Cloud",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        repository.setLocationToCloudValue(bookID);
+                        Intent playerIntent = new Intent(PlayerActivity.this, PlayerActivity.class);
+                        Bundle b = new Bundle();
+                        b.putString("bookID", bookID);
+                        playerIntent.putExtras(b);
+                        startActivity(playerIntent);
+                        finish();
+                    }
+                });
+        builder.setNegativeButton("Local", new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(DialogInterface dialog, int which) {
                 repository.setLocationToLocalValue(bookID);
-                locationPopupWindow.dismiss();
             }
         });
-        cloudBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                repository.setLocationToCloudValue(bookID);
-                locationPopupWindow.dismiss();
-                Intent playerIntent = new Intent(PlayerActivity.this, PlayerActivity.class);
-                Bundle b = new Bundle();
-                b.putString("bookID", bookID);
-                playerIntent.putExtras(b);
-                startActivity(playerIntent);
-                finish();
-            }
-        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 
