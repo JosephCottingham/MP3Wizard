@@ -1,9 +1,11 @@
 package com.teambuild.mp3wizard.ui.settings;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,7 +14,9 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.teambuild.mp3wizard.LoginActivity;
 import com.teambuild.mp3wizard.R;
+import com.teambuild.mp3wizard.repository.RepositorySingleton;
 
 public class SettingsFragment extends Fragment {
 
@@ -28,6 +32,18 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);
+            }
+        });
+        Button logOutBtn = root.findViewById(R.id.logOutBtn);
+        logOutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO fix up this signout
+                RepositorySingleton.getInstance().signOut();
+                Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                homeIntent.addCategory( Intent.CATEGORY_HOME );
+                homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(homeIntent);
             }
         });
         return root;

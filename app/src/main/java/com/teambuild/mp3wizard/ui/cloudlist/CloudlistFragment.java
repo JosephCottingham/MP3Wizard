@@ -1,6 +1,7 @@
 package com.teambuild.mp3wizard.ui.cloudlist;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +26,16 @@ public class CloudlistFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         // set the view model
+        Log.d("CloudlistFragment", "onCreateView: set the view model");
         cloudlistViewModel = ViewModelProviders.of(this).get(CloudlistViewModel.class);
 
         // get view displayed
+        Log.d("CloudlistFragment", "onCreateView: get view displayed");
         View root = inflater.inflate(R.layout.fragment_cloudlist, container, false);
 
         // sets listview with data
         listView = root.findViewById(R.id.cloudListView);
+        Log.d("CloudlistFragment", "onCreateView: set Adaptor");
         listView.setAdapter(RepositorySingleton.getInstance().getCloudListAdapterFirebase(CloudlistFragment.this)); //TODO get firebase adaptor
 
 

@@ -40,11 +40,14 @@ public class CloudFirebaseDatabase {
     public CloudListAdapterFirebase getFirebaseListAdapter(LifecycleOwner owner) {
 
         Query query = com.google.firebase.database.FirebaseDatabase.getInstance().getReference().child(getFirebaseUserID());
+        Log.d("CloudFirebaseDatabase", "getFirebaseListAdapter: query");
+        Log.d("CloudFirebaseDatabase", "getFirebaseListAdapter: " + query.toString());
         FirebaseListOptions<Book> options = new FirebaseListOptions.Builder<Book>()
                 .setLayout(R.layout.book_info)
                 .setLifecycleOwner(owner)
                 .setQuery(query, Book.class)
                 .build();
+        Log.d("CloudFirebaseDatabase", "getFirebaseListAdapter: options");
 
         return new CloudListAdapterFirebase(options);
     }
@@ -79,11 +82,15 @@ public class CloudFirebaseDatabase {
                 }
 
                 for (int x = 0; x < firebaseData.size(); x++){
+                    Log.d("FirebaseDatabase", "onChildChanged: set looped: " + String.valueOf(x));
                     if (firebaseData.get(x).get("title").equals(tempChange.get("title"))){
+                        Log.d("FirebaseDatabase", "onChildChanged: title equals title");
                         firebaseData.set(x, tempChange);
+                        Log.d("FirebaseDatabase", "onChildChanged: tempChange SET");
                         return;
                     }
                 }
+                Log.d("FirebaseDatabase", "onChildChanged: Add temp change");
                 firebaseData.add(tempChange);
 
             }
@@ -137,5 +144,9 @@ public class CloudFirebaseDatabase {
 
     public String getFirebaseUserID(){
         return mFirebaseAuth.getCurrentUser().getUid();
+    }
+
+    public void signOut(){
+        mFirebaseAuth.signOut();
     }
 }

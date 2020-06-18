@@ -11,6 +11,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -19,14 +20,17 @@ import androidx.annotation.RequiresApi;
 
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.squareup.picasso.Picasso;
 import com.teambuild.mp3wizard.Book;
 import com.teambuild.mp3wizard.PlayerActivity;
 import com.teambuild.mp3wizard.R;
@@ -49,23 +53,37 @@ public class CloudListAdapterFirebase extends FirebaseListAdapter {
     @Override
     protected void populateView(View v, Object model, int position){
         repository = RepositorySingleton.getInstance();
+        Log.d("populateView", "populateView: Model Loaded");
 
         // Cast model to book, model is the current postion in the lists book
         final Book book = (Book) model;
+        Log.d("populateView", "populateView: Model Loaded 2");
 
         // Ref views, and set reference values
         TextView bookTitle = v.findViewById(R.id.bookTitle);
         TextView bookFile = v.findViewById(R.id.bookFile);
         TextView bookTime = v.findViewById(R.id.bookTime);
+        final ImageView BookIcon = v.findViewById(R.id.bookIcon);
         final TextView bookDownload = v.findViewById(R.id.bookDownloaded);
         final ProgressBar progressBar = v.findViewById(R.id.bookDownloadProgressBar);
         final Button bookDownloadBtn = v.findViewById(R.id.bookDownloadBtn);
-
         // populate views with values for current book
         bookTitle.setText(book.getTitle());
         bookFile.setText(String.format("File %s / %s", book.getCurrentFile(), book.getFileNum()));
         bookTime.setText(createTimeLabel(book.getLocSecAsInt()));
-
+        StorageReference iconRef = FirebaseStorage.getInstance().getReference("users" + File.separator + RepositorySingleton.getInstance().getFirebaseUserID() + File.separator + book.getTitle()).child("icon.png");
+        iconRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Picasso.get().load(uri.toString()).into(BookIcon);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                //TODO Default cloud content Icon
+                // Handle any errors
+            }
+        });
         // checks if book is logged in SQLITE database (It is logged after download so all content is fully aviable if found)
         // sets button to play or download based on that
         final Boolean downloaded=repository.isDownloaded(book.getTitle());

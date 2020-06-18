@@ -73,6 +73,7 @@ public class RepositorySingleton {
     }
 
     public CloudListAdapterFirebase getCloudListAdapterFirebase(LifecycleOwner owner){
+        Log.d("RepositorySingleton", "getCloudListAdapterFirebase: getCloudListAdapterFirebase");
         return cloudFirebaseDatabase.getFirebaseListAdapter(owner);
     }
 
@@ -194,5 +195,9 @@ public class RepositorySingleton {
 
     public void setProgressBar(String title, ProgressBar progressBar){
         progress.put(title, progressBar);
+    }
+
+    public void signOut(){
+        cloudFirebaseDatabase.signOut();
     }
 }
